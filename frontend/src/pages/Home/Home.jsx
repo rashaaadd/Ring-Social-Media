@@ -8,7 +8,9 @@ function Home() {
   return (
     <div className='Home'>
       <ProfileSide/>
-      <PostSide/>
+      <div className='home-center'>
+        <PostSide/>
+      </div>
       <RightSide/>
     </div>
   )

@@ -1,8 +1,9 @@
 .RightSide{
+    width: 25%;
     display: flex;
     flex-direction: column;
-    gap:2rem;
-    
+    gap:1rem;
+    transition: ease all .5s;
 }
 
 .navIcons{
@@ -19,4 +20,10 @@
     height: 3rem;
     width: 80%;
     align-self: center;
+}
+
+@media only screen and (max-width: 992px) {
+    .RightSide{
+        display: none;
+    }
 }

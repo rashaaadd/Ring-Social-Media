@@ -6,10 +6,11 @@ import { useSelector } from "react-redux";
 import Home from "./pages/Home/Home";
 import { Toaster } from "react-hot-toast";
 import Profile from "./pages/Profile/Profile";
+import ProtectedRoute from "./components/protectedRoute";
+import PublicRoutes from "./components/publicRoutes";
 
 function App() {
   const { loading } = useSelector((state) => state.alerts);
-  console.log(loading, "loading valueee");
   return (
     <BrowserRouter>
       <div className="App">
@@ -23,9 +24,9 @@ function App() {
         <div className="blur" style={{ top: "36%", left: "-8rem" }}></div>
         {/* <Auth /> */}
         <Routes>
-          <Route path="/" element={<Auth />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/" element={<PublicRoutes><Auth /></PublicRoutes>} />
+          <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         </Routes>
       </div>
     </BrowserRouter>

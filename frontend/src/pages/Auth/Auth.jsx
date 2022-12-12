@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import toast from 'react-hot-toast';
 import Logo from '../../img/logo1.png'
 import { hideLoading, showLoading } from "../../redux/alertSlice";
+import { USER_API_POST } from "../../axios";
 
 
 function Auth() {
@@ -27,17 +28,19 @@ function Auth() {
       try {
         dispatch(showLoading());
         console.log(formData, "form.......data");
-        const response = await axios.post(
-          "http://localhost:5000/register",
+        const response = await USER_API_POST('/register',
           formData
         );
         console.log(response);
         dispatch(hideLoading());
         if (response.status) {
-          toast.success(response.data.data.message);
+          toast.success(response.data.message);
           toast("Redirecting to Home Page");
           localStorage.setItem("token", response.data.data.token);
-          navigate("/home");
+          setSignup((prev)=>!prev)
+          Array.from(document.querySelectorAll("input")).forEach(
+            input => (input.value = "")
+          );
         }
       } catch (error) {
         dispatch(hideLoading());
@@ -47,15 +50,14 @@ function Auth() {
     } else {
       try {
         dispatch(showLoading());
-        const response = await axios.post(
-          "http://localhost:5000/login",
+        const response = await USER_API_POST('/login',
           formData
         );
         console.log(response, "resposnmeeaad");
         dispatch(hideLoading());
-        toast.success(response.data.data.message);
+        toast.success(response.data.message);
         toast("Redirecting to Home Page");
-        console.log(formData, "fo1111111111111", response.data.data.token);
+        // console.log(formData, "fo1111111111111", response.data.data.token);
         localStorage.setItem("token", response.data.data.token);
         navigate("/home");
       } catch (error) {
@@ -158,7 +160,12 @@ function Auth() {
           <div>
             <p style={{ fontSize: "12px" }}>
               {signup ? "Already have an account? " : "Don't have an account? "}
-              <span onClick={() => setSignup((prev) => !prev)}>
+              <span onClick={() => {
+                setSignup((prev) => !prev)
+                Array.from(document.querySelectorAll("input")).forEach(
+                  input => (input.value = "")
+                );
+              }}>
                 {signup ? "Login!" : "Signup"}
               </span>
             </p>

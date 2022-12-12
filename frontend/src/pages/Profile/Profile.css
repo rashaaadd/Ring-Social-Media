@@ -1,12 +1,25 @@
 .Profile{
     position: relative;
-    display: grid;
-    grid-template-columns: 18rem auto 20rem;
+    display: flex;
     gap: 1rem;
 }
 
 .Profile-center{
+    width: 47% ;
+    overflow: auto;
     display: flex;
     flex-direction: column;
     gap: 1rem;
+}
+
+@media only screen and (max-width: 768px) {
+    .Profile-center{
+        width: 100% !important;
+    }
+}
+
+@media only screen and (max-width: 992px) {
+    .Profile-center{
+        width: 60%;
+    }
 }

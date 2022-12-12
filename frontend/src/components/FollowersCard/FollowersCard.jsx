@@ -5,10 +5,10 @@ import './FollowersCard.css'
 function FollowersCard() {
   return (
     <div className="FollowersCard">
-      <h3>Who is following you</h3>
+      <h5>Who is following you</h5>
         {Followers.map((follower,i)=>{
           return(
-            <div className="follower">
+            <div className="follower" key={follower.name}>
               <div>
                 <img src={follower.img} alt="" 
                 className='followerImg'/>
