@@ -61,7 +61,6 @@ const registerUser = asyncHandler(async (req, res) => {
         fname,
         lname,
         email,
-        token: generateToken(newUser._id),
       },
       message: "User created successfully",
     });

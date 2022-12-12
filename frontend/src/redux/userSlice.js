@@ -1,41 +1,45 @@
-import { USER_API } from '../axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { getUser } from "./authService";
 
-const { createSlice, createAsyncThunk } = require("@reduxjs/toolkit");
-
-const fetchUserById = createAsyncThunk(
-  'users/fetchByIdStatus',
-  async () => {
-    const response = await USER_API.get('/user', {
-        headers: {
-          Authorization: 'Bearer' + localStorage.getItem('token'),
-        }});
-    return response.data;
+export const fetchUserById = createAsyncThunk(
+  "users/fetchUser",
+  async (token, thunkAPI) => {
+    try {
+      return await getUser(token);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
   }
 );
 
 export const userSlice = createSlice({
-  name: 'users',
+  name: "users",
   initialState: {
     user: null,
   },
   reducers: {
     setUser: (state, action) => {
-      state.user = action.payload;
+      state.user = action.payload.data;
     },
   },
   extraReducers: (builder) => {
-    // Add reducers for additional action types here, and handle loading state as needed
     builder
-    .addCase(fetchUserById.pending, (state, action) => {
+      .addCase(fetchUserById.pending, (state, action) => {
         state.loading = true;
-    })
+      })
       .addCase(fetchUserById.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.data;
       })
       .addCase(fetchUserById.rejected, (state, action) => {
         state.loading = false;
-        localStorage.clear()
+        localStorage.clear();
         state.user = null;
       });
   },

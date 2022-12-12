@@ -1,15 +1,25 @@
-import React from "react";
+import React,{ useEffect} from "react";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Auth from "./pages/Auth/Auth";
-import { useSelector } from "react-redux";
+import { useDispatch,useSelector } from "react-redux";
 import Home from "./pages/Home/Home";
 import { Toaster } from "react-hot-toast";
 import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/protectedRoute";
 import PublicRoutes from "./components/publicRoutes";
+import { fetchUserById } from "./redux/userSlice"
 
 function App() {
+  const dispatch = useDispatch();
+  const token = localStorage.getItem("token");
+  const { user } = useSelector(state => state.users);
+  useEffect(() => {
+    if(!user){
+      dispatch(fetchUserById(token));
+    }
+  // eslint-disable-next-line
+  }, [user])
   const { loading } = useSelector((state) => state.alerts);
   return (
     <BrowserRouter>
