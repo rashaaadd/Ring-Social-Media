@@ -69,6 +69,10 @@ const userSchema = mongoose.Schema(
       city: String,
       hometown: String,
     },
+    posts: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Post",
+    },
   },
   {
     timestamp: true,

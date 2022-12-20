@@ -14,13 +14,12 @@ function App() {
   const dispatch = useDispatch();
   const token = localStorage.getItem("token");
   const { user } = useSelector(state => state.users);
+  const { loading } = useSelector((state) => state.alerts);
   useEffect(() => {
     if(!user){
       dispatch(fetchUserById(token));
     }
-  // eslint-disable-next-line
   }, [user])
-  const { loading } = useSelector((state) => state.alerts);
   return (
     <BrowserRouter>
       <div className="App">
@@ -32,7 +31,6 @@ function App() {
         <Toaster position="top-center" reverseOrder={false} />
         <div className="blur" style={{ top: "-18%", right: "0" }}></div>
         <div className="blur" style={{ top: "36%", left: "-8rem" }}></div>
-        {/* <Auth /> */}
         <Routes>
           <Route path="/" element={<PublicRoutes><Auth /></PublicRoutes>} />
           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />

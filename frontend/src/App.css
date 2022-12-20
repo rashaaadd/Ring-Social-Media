@@ -40,6 +40,11 @@
   background: var(--buttonBg);
   transition: all 100ms ease ease-out;
 }
+.button:disabled{
+  background: silver;
+  pointer-events: none;
+}
+
 .button:hover{
   cursor: pointer;
   color: var(--violet);

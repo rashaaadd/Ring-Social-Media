@@ -1,12 +1,19 @@
 import React, { useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Cover from "../../img/cover.jpg";
 import Profile from "../../img/profileImg.jpg";
+import { fetchUserById } from "../../redux/userSlice";
 import "./ProfileCard.css";
 
 function ProfileCard() {
+  const token = localStorage.getItem("token");
   const {user} = useSelector((state) => state.users);
-  console.log(user, "user details");
+  const dispatch = useDispatch()
+  useEffect(() => {
+    if(!user){
+      dispatch(fetchUserById(token));
+    } 
+  },[user]);
   const ProfilePage = false;
   return (
     <div className="ProfileCard">
@@ -16,20 +23,20 @@ function ProfileCard() {
       </div>
 
       <div className="ProfileName">
-        <span>{user?.user?.fname} {user?.user?.lname}</span>
-        <span>{user?.user?.username}</span>
+        <span>{user?.fname} {user?.lname}</span>
+        <span>{user?.username}</span>
       </div>
 
       <div className="FollowStatus">
         <hr />
         <div>
           <div className="follow">
-            <span>{user?.user?.following?.length}</span>
+            <span>{user?.following?.length}</span>
             <span>Followings</span>
           </div>
           <div className="vl"></div>
           <div className="follow">
-            <span>{user?.user?.followers?.length}</span>
+            <span>{user?.followers?.length}</span>
             <span>Followers</span>
           </div>
 

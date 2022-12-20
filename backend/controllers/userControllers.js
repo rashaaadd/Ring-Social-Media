@@ -26,6 +26,7 @@ const registerUser = asyncHandler(async (req, res) => {
     User.findOne({ username }),
     User.findOne({ phone }),
   ]);
+  console.log(emailExists,usernameExists,phoneExists),'................';
 
   if (emailExists) {
     res.status(400);
@@ -33,11 +34,11 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   if (usernameExists) {
     res.status(400);
-    throw new Error("Email already exists.");
+    throw new Error("Username already exists.");
   }
   if (phoneExists) {
     res.status(400);
-    throw new Error("Email already exists.");
+    throw new Error("Phone already exists.");
   }
 
   //Hash password
@@ -125,8 +126,165 @@ const getUser = asyncHandler(async (req, res) => {
   }
 });
 
+//@desc Update user 
+//@route PUT /user
+//access /private
+
+const updateUser = asyncHandler(async(req,res) => {
+  const userId = req.params.id
+  console.log(req.body,'...............',userId)
+  // if( userId === req.user._id){
+    try {
+      const user = await User.findByIdAndUpdate(userId, req.body, {new:true})
+      res.status(201).json({
+        status: 'success',
+        data: user,
+        message:'User updated successfully'
+      })
+    } catch (error) {
+      console.log(error)
+      res.status(502)
+      throw new Error("Error updating user.")
+    }
+  // }else{
+  //   res.status(500)
+  //   throw new Error("Access denied.")
+  // }
+})
+
+//@desc Delete user 
+//@route DELETE /user
+//access /private
+const deleteUser = asyncHandler(async (req,res) => {
+  const userId = req.params.id
+
+  // if(userId === req.user._id){
+    try {
+      const user = await User.findByIdAndRemove(userId)
+      if(user){
+        res.status(200).json({
+          status: 'success',
+          message: "User deleted successfully"
+        })
+      }else{
+        res.status(404);
+        throw new Error("User not found.");
+      }
+      
+    } catch (error) {
+      console.log(error)
+      res.status(500)
+      throw new Error("Error deleting user")
+    }
+  // }else{
+  //   res.status(500)
+  //     throw new Error("Access denied")
+  // }
+})
+
+//@desc Follow a user 
+//@route PUT /follow/:id
+//access /private
+const followUser = asyncHandler(async(req,res) => {
+  const followUserId = req.params.id
+  const userId = req.userId 
+  console.log(followUserId,'.........',userId)
+  if(userId === followUserId){
+    res.status(403)
+    throw new Error("Action forbidden")
+  }else{
+    try {
+      const followUser = await User.findById(followUserId)
+      console.log(followUser,'follow user is the here aliya');
+      const user = await User.findById(userId)
+      console.log(user,'current user is the here aliya');
+
+      if(!followUser.followers.includes(userId)){
+        await followUser.updateOne({$push:{followers: userId}})
+        await user.updateOne({ $push : { following: followUserId}})
+        res.status(200).json({
+          status: 'success',
+          message: 'User followed successfully.'
+        })
+      }else{
+        await followUser.updateOne({$pull:{followers: userId}})
+        await user.updateOne({ $pull : { following: followUserId}})
+        res.status(200).json({
+          status: 'success',
+          message: 'User unfollowed successfully.'
+        })
+      }
+    } catch (error) {
+      console.log(error)
+      res.status(500)
+      throw new Error("Error following user")
+    }
+  }
+})
+
+
+//@desc Unfollow a user 
+//@route PUT /unfollow/:id
+//access /private
+// const unFollowUser = asyncHandler(async(req,res) => {
+//   const followUserId = req.params.id
+//   const {userId} = req.body 
+//   if(userId === followUserId){
+//     res.status(403)
+//     throw new Error("Action forbidden")
+//   }else{
+//     try {
+//       const followUser = await User.findById(followUserId)
+//       const user = await User.findById(userId)
+//       if(followUser.followers.includes(userId)){
+//         await followUser.updateOne({$pull:{followers: userId}})
+//         await user.updateOne({ $pull : { following: followUserId}})
+//         res.status(200).json({
+//           status: 'success',
+//           message: 'User unfollowed successfully.'
+//         })
+//       }else{
+//         res.status(403).json({message:"User is not followed."})
+//         throw new Error("User is not followed.")
+//       }
+//     } catch (error) {
+//       console.log(error)
+//       res.status(500)
+//       throw new Error("Error following user")
+//     }
+//   }
+// })
+
+
+//@desc Get all users 
+//@route GET /allusers
+//access /public
+
+const getAllUsers = asyncHandler(async(req,res) => {
+  const userId = req.userId
+  try {
+    const users = await User.find({_id: {$ne: userId}})
+    res.status(200).json({
+      status:'success',
+      message: 'Users found',
+      data: users
+    })
+  } catch (error) {
+    console.log(error)
+    res.status(500)
+    throw new Error("Error getting all users")
+  }
+})
+
+ 
+
 module.exports = {
   registerUser,
   loginUser,
   getUser,
+  updateUser,
+  deleteUser,
+  followUser,
+  // unFollowUser,
+  getAllUsers
 };
