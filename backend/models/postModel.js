@@ -8,16 +8,10 @@ const postSchema = mongoose.Schema({
     desc:{
         type: String,
     },
-    userName: {
-        type: String,
-    },
-    userProfilePic:{
-        type: String,
-    },
     images:{
         type: String,
         required: [true, 'No image'],
-    },
+    },      
     cloudinary_id: {
         type: String,
         required: true

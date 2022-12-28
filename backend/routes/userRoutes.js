@@ -1,4 +1,5 @@
 const express = require('express');
+const upload = require('../utils/multer');
 
 const router = express.Router()
 const {
@@ -7,25 +8,42 @@ const {
     getUser,
     updateUser,
     deleteUser,
-    followUser,
-    // unFollowUser,
-    getAllUsers
+    followUser, 
+    getAllUsers,
+    getOTP,
+    verifyOTP,
+    resetPassword
 } = require('../controllers/userControllers');
+
+
 const protect = require('../middleware/authMiddleware')
 
 router.post('/register',registerUser);
+
+router.post('/password/reset',getOTP);
+
+router.post('/reset-password/:id',resetPassword);
+
+router.post('/verify-user',verifyOTP)
 
 router.post("/login",loginUser)
 
 router.get('/user',protect,getUser)
 
-router.route('/:id',protect).put(updateUser).delete(deleteUser);
+router.post('/:id',protect,upload.fields([{
+    name:'profile',
+    maxCount:1  
+},{
+    name:'cover',
+    maxCount:1
+}]),updateUser)
+
+// router.route('/:id',protect).delete(deleteUser);
 
 router.get('/allusers',protect,getAllUsers)
 
 router.route('/:id/follow').put(protect,followUser)
 
-// router.route('/:id/unfollow',protect).put(unFollowUser)
 
 
 

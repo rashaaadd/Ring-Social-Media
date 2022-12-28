@@ -27,6 +27,12 @@ const userSchema = mongoose.Schema(
       required: true,
       select: false,
     },
+    profilePic: {
+      type: String,
+    },
+    coverPic: {
+      type: String,
+    },
     phone: {
       type: String,
       required: true,
@@ -51,28 +57,25 @@ const userSchema = mongoose.Schema(
       },
       relation: {
         type: String,
-        enum: {
-          values: ["single", "married"],
-          message: "{VALUE} is not supported!",
-        },
       },
       gender: {
         type: String,
-        enum: {
-          values: ["male", "female", "other"],
-          message: "{VALUE} is not supported!",
-        },
       },
       bio: String,
       work: String,
-      education: String,
       city: String,
-      hometown: String,
+      country: String,
     },
     posts: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: "Post",
     },
+    profile_cloudinary_id: {
+      type: String
+    },
+    cover_cloudinary_id:{
+      type: String
+    }
   },
   {
     timestamp: true,

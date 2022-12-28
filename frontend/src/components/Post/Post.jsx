@@ -1,31 +1,177 @@
-import React from 'react'
-import './Post.css'
-import Comment from '../../img/comment.png'
-import Share from '../../img/share.png'
-import Heart from '../../img/like.png'
-import NotLike from '../../img/notlike.png'
+import React from "react";
+import "./Post.css";
+import Comment from "../../img/comment.png";
+import Share from "../../img/share.png";
+import Heart from "../../img/like.png";
+import NotLike from "../../img/notlike.png";
+import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { fetchUserById } from "../../redux/userSlice";
+import { hideLoading, showLoading } from "../../redux/alertSlice";
+import { POSTS_API } from "../../axios";
+import { toast } from "react-hot-toast";
+import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+// eslint-disable-next-line
+import { format } from 'timeago.js';
+import EditModal from "../EditModal/EditModal";
 
+function Post({ data, id }) {
+  const token = localStorage.getItem("token");
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.users);
+  const [liked, setLiked] = useState(data?.likes?.includes(user?._id));
+  const [likes, setLikes] = useState(data?.likes?.length);
+  const [ editmodalOpened, setEditModalOpened ] = useState(false)
+  const handleLike = async (id) => {
+    try {
+      setLiked((prev) => !prev);
+      dispatch(showLoading());
+      const response = await POSTS_API.put(`/${id}/like`);
+      dispatch(hideLoading());
+      if (response.data.status) {
+        toast.success(response.data.message);
+        liked ? setLikes((prev) => prev - 1) : setLikes((prev) => prev + 1);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      dispatch(hideLoading());
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
+  };
 
-function Post({data,id}) {
-  console.log(data,'data')
+  useEffect(() => {
+    if (!user) {
+      fetchUserById(token);
+    }
+  }, []);
+  const options = ["Edit", "Delete", "Report"];
+
+  const ITEM_HEIGHT = 30;
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+  const handleMenuClick = async(option, postId) => {
+    switch (option) {
+      case "Delete":
+        try {
+          dispatch(showLoading());
+          const response = await POSTS_API.delete(`/${postId}`);
+          console.log(response,'response of deleting a post')
+          dispatch(hideLoading())
+          if(response.status){
+            toast.success(response.data.message);
+            document.getElementById(postId).style.display = 'none';
+            setAnchorEl(null);
+            dispatch(fetchUserById(token));
+          }else{
+            console.log('11111111')
+            toast.error(response.response.data.message);
+          }
+        } catch (error) {
+          console.log('hiii')
+          dispatch(hideLoading())
+          console.log(error);
+          toast.error(error.response.data.message);
+        }
+      case "Edit":
+        try {
+          setEditModalOpened(true);
+          setAnchorEl(null);
+        } catch (error) {
+          console.log(error);
+          toast.error(error.response.data.message);
+        }
+    }
+  };
   return (
-    <div className="Post" key={data?._id}>
-         <img src={data?.images} alt="PostImage" />
+    <div className="Post" key={data?._id} id={data?._id}>
+      <IconButton
+        aria-label="more"
+        id="long-button"
+        aria-controls={open ? "long-menu" : undefined}
+        aria-expanded={open ? "true" : undefined}
+        aria-haspopup="true"
+        onClick={handleClick}
+      >
+        <MoreVertIcon />
+      </IconButton>
+      <Menu
+        id="long-menu"
+        MenuListProps={{
+          "aria-labelledby": "small-button",
+        }}
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        PaperProps={{
+          style: {
+            maxHeight: ITEM_HEIGHT * 4.5,
+            width: "12ch",
+            left: "2ch"
+          },
+        }}
+      >
+        {options.map((option) => (
+          <MenuItem
+            key={option}
+            onClick={() => handleMenuClick(option, data?._id)}
+            style={{ fontSize: "0.8rem", fontFamily: "Montserrat" }}
+          >
+            {option}
+          </MenuItem>
+        ))}
+      </Menu>
+      <EditModal editmodalOpened={editmodalOpened} setEditModalOpened={setEditModalOpened} data={data}/>
 
-        <div className="postReact">
-            <img src={data?.likes? Heart:NotLike} alt="" style={{width:'30px',height:'30px'}} />
-            <img src={Comment} alt="" />
-            <img src={Share} alt="" />
-        </div>
+      <img src={data?.images} alt="PostImage" />
 
-       <span style={{color:'var(--gray) ',fontSize:'13px'}}>{data?.likes?.length? data.likes.length : 0} likes</span> 
+      <div className="postReact">
+        <img
+          src={liked ? Heart : NotLike}
+          alt=""
+          style={
+            liked
+              ? { width: "25px", height: "25px", cursor: "pointer" }
+              : { width: "25px", height: "20px", cursor: "pointer" }
+          }
+          onClick={() => handleLike(data?._id)}
+        />
+        <img
+          src={Comment}
+          alt=""
+          style={{ width: "22px", height: "22px", cursor: "pointer" }}
+        />
+        <img
+          src={Share}
+          alt=""
+          style={{ width: "21px", height: "21px", cursor: "pointer" }}
+        />
+      </div>
 
-       <div className='details'>
-            <span><b>{data?.userId?.username} </b></span>
-            <span> {data.desc}</span>
-       </div>
+      <span style={{ color: "var(--gray) ", fontSize: "13px" }}>
+        {likes ? likes : 0} likes
+      </span>
+      <div className="details">
+        <span>
+          <b>{data?.userId?.username} </b>
+        </span>
+        <span> {data?.desc}</span>
+      </div>
+      <span style={{ color: "var(--gray) ", fontSize: "10px" }}>{format(data?.createdAt)}</span>
+
     </div>
-  )
+  );
 }
 
-export default Post
+export default Post;

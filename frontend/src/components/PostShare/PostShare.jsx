@@ -10,14 +10,13 @@ import { useRef } from "react";
 import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { POSTS, POSTS_POST } from "../../axios";
-import  { PostsData }  from '../../Data/PostData'
 import { hideLoading, showLoading } from "../../redux/alertSlice";
 import { Image } from 'cloudinary-react'
+import { fetchUserById } from "../../redux/userSlice";
 
 
 function PostShare({data}) {
   const { posts, setPosts } = data
-  console.log(posts,'hello this is posts')
   const loading = useSelector((state) => state.alerts.loading)
   const [image, setImage] = useState({});
   const [displayImage, setDisplayImage] = useState({})
@@ -49,16 +48,16 @@ function PostShare({data}) {
   const handleSubmitPostUpload = async (e) => {
     e.preventDefault();
     if(!image) return toast.error("Please choose a file");
-    console.log(formData,'formData.......111')
     try {
+      console.log(formData,'formDataaaaaa is here')
       dispatch(showLoading())
       const response = await POSTS_POST('/create',formData)
-      console.log(response,'response after creating post')
       dispatch(hideLoading())
       if(response.data.status){
         toast.success(response.data.message)
         setPosts([response.data.data,...posts])
         reset();
+        dispatch(fetchUserById());
       }
     } catch (error) {
       dispatch(hideLoading())

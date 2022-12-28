@@ -5,19 +5,26 @@ import { hideLoading, showLoading } from '../../redux/alertSlice'
 import { useEffect } from 'react'
 import { USER_API_GET, USER_API_PUT } from '../../axios'
 import { fetchUserById } from '../../redux/userSlice'
+import { toast } from 'react-hot-toast'
+import Profile from "../../img/profileImg.jpg";
+import { useNavigate } from "react-router-dom"
 
 function FollowersCard() {
   const token = localStorage.getItem('token')
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const  {user}  = useSelector((state) => state.users)
   const [followers, setFollowers ] = useState([])
+  const handleProfileClick = (e,data) => {
+    console.log(data,'hello')
+    navigate(`/profile/${data?.username}`,{state:data})
+  }
   useEffect(() => {
     (async() => {
       try {
         dispatch(showLoading())
         const response = await USER_API_GET('/allusers')
         dispatch(hideLoading())
-        console.log(response,'response @ followers card')
         if(response.data.status){
           setFollowers(response.data.data)
         }
@@ -33,7 +40,7 @@ function FollowersCard() {
       dispatch(showLoading())
       const response = await USER_API_PUT(`/${id}/follow`)
       dispatch(hideLoading())
-      console.log(response,'response @ following card')
+      toast.success(response.data.message)
       dispatch(fetchUserById(token))
     } catch (error) {
       dispatch(hideLoading())
@@ -46,8 +53,8 @@ function FollowersCard() {
         {followers.map((follower,i)=>{
           return(
             <div className="follower" key={follower._id}>
-              <div>
-                <img src={follower.img} alt="" 
+              <div onClick={(e)=>handleProfileClick(e,follower)}>
+                <img src={follower.profilePic ? follower.profilePic : Profile} alt="" 
                 className='followerImg'/>
                 <div className="name">
                   <span>{follower.name}</span>

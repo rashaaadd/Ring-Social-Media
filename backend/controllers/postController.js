@@ -8,8 +8,9 @@ const mongoose = require("mongoose");
 //@route POST /create
 //@access Private
 const newPost = asyncHandler(async (req, res) => {
-  console.log("New post creation call reached at server.")
+  console.log("New post creation call reached at server.");
   const image = req.file;
+  console.log(image, "afsdffdasdfa ");
   const { desc } = req.body;
   const userId = req.userId;
   if (!desc || !image) {
@@ -29,10 +30,10 @@ const newPost = asyncHandler(async (req, res) => {
       cloudinary_id: result.public_id,
       time: new Date().toUTCString(),
     });
-    post = await Post.findById(post._id).populate('userId')
-    console.log(post,'post created at server')
+    post = await Post.findById(post._id).populate("userId");
+    console.log(post, "post created at server");
     user.posts.push(post._id);
-    const userData = await user.save();
+    await user.save();
     res.status(200).json({
       status: "success",
       data: post,
@@ -51,21 +52,21 @@ const newPost = asyncHandler(async (req, res) => {
 
 const updatePost = asyncHandler(async (req, res) => {
   const postId = req.params.id;
-  const userId  = req.userId;
-  try {
-    const post = await Post.findById(postId);
-    if (userId == post.userId) {
-      const updatedPost = await post.updateOne({ $set: req.body });
-      res.status(200).json({
-        status: "success",
-        data: updatedPost,
-        message: "Post Updated Successfully.",
-      });
-    } else {
-      res.status(403);
-      throw new Error("Access Forbidden.");
-    }
-  } catch (error) {
+  const userId = req.userId;
+  const post = await Post.findById(postId);
+  console.log(userId, ".....", post.userId);
+  if (userId != post.userId) {
+    res.status(403);
+    throw new Error("Access Forbidden.");
+  }
+  const updatedPost = await post.updateOne({ $set: req.body });
+  if (updatedPost) {
+    res.status(200).json({
+      status: "success",
+      data: updatedPost,
+      message: "Post Updated Successfully.",
+    });
+  } else {
     console.log(error);
     res.status(500);
     throw new Error("Error updating post");
@@ -76,95 +77,102 @@ const updatePost = asyncHandler(async (req, res) => {
 //@route DELETE /:id
 //@access Private
 
-const deletePost = asyncHandler(async (req,res) => {
-    const postId = req.params.id;
-    const {userId} = req.body
-    try{
-        const post = await Post.findById(postId);
-        if(userId == post.userId){
-            await post.deleteOne();
-            res.status(200).json({
-                status:'success',
-                message: 'Post deleted successfully.'
-            })
-        }else{
-            res.status(403)
-            throw new Error("Access Forbidden.")
-        }
-    }catch(error){
-        console.log(error)
-        res.status(500)
-        throw new Error("Error deleting post.")
-    }
-})
+const deletePost = asyncHandler(async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.userId;
+  if (!userId) {
+    res.status(401);
+    throw new Error("Auth verification error");
+  }
+  if (!postId) {
+    res.status(406);
+    throw new Error("Post parameter not found");
+  }
+  const post = await Post.findById(postId);
+  if (userId == post.userId) {
+    await cloudinary.uploader.destroy(post.cloudinary_id);
+    await User.findByIdAndUpdate(userId, { $pull: { posts: postId } });
+    await post.deleteOne();
+    res.status(200).json({
+      status: "success",
+      message: "Post deleted successfully.",
+    });
+  } else {
+    res.status(403);
+    throw new Error("Access Forbidden.");
+  }
+});
 
 //@desc Get user timeline
-//@route PUT /:id/timeline
+//@route GET /timeline
 //access /private
 
-const getTimelinePosts = asyncHandler(async (req,res) => {
-    const userId = req.userId
-    console.log(req.params.id,'hellooooo seerr.. big ffan serr')
-    try{
-        const userPosts = await Post.find({userId}).populate('userId')
-        const followingPosts = await User.aggregate([
-          {
-            $match:{
-              _id:new mongoose.Types.ObjectId(userId),
-            }
-          },
-          {
-            $lookup:{
-              from: 'posts', 
-              localField: 'following',
-              foreignField: 'userId',
-              as: 'result'
-            }
-          }, 
-          {
-            $unwind:'$result'
-          },
-          {
-            $project:{
-              _id:'$result._id',
-              userId:'$result.userId',
-              desc:'$result.desc',
-              images:'$result.images',
-              cloudinary_id:'$result.cloudinary_id',
-              like:'$result.likes',
-              comments:'$result.comments',
-              createdAt:'$result.createdAt',
-              updatedAt:'$result.updatedAt'
-            }
-          },
-          {
-            $lookup:{
-              from: 'users',
-              localField: 'userId',
-              foreignField: '_id',
-              as: 'userId'
-            }
-          },
-          {
-            $unwind:'$userId',  
-          }    
-        ])
-        console.log(userPosts,'.......userPosts')
-        console.log(followingPosts,'.........followingPosts')
-        const data = userPosts.concat(followingPosts).sort((a,b) => b.createdAt - a.createdAt )
-        console.log(data,'dataaa')
-        res.json({
-          status : 'success',
-          message: 'Timeline posts fetched.',  
-          data:data   
-        })
-    }catch(error){
-        console.log(error)
-        res.status(500)
-        throw new Error("Error getting timeline posts.")
-    } 
-})
-
+const getTimelinePosts = asyncHandler(async (req, res) => {
+  const userId = req.userId;
+  if (!userId) {
+    res.status(401);
+    throw new Error("Authentication error.");
+  }
+  const userPosts = await Post.find({ userId }).populate("userId");
+  if (!userPosts) {
+    res.status(400);
+    throw new Error("Failed to retrieve data.");
+  }
+  const followingPosts = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $lookup: {
+        from: "posts",
+        localField: "following",
+        foreignField: "userId",
+        as: "result",
+      },
+    },
+    {
+      $unwind: "$result",
+    },
+    {
+      $project: {
+        _id: "$result._id",
+        userId: "$result.userId",
+        desc: "$result.desc",
+        images: "$result.images",
+        cloudinary_id: "$result.cloudinary_id",
+        likes: "$result.likes",
+        comments: "$result.comments",
+        createdAt: "$result.createdAt",
+        updatedAt: "$result.updatedAt",
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "userId",
+      },
+    },
+    {
+      $unwind: "$userId",
+    },
+  ]);
+  const data = userPosts
+    .concat(followingPosts)
+    .sort((a, b) => b.createdAt - a.createdAt);
+  res.json({
+    status: "success",
+    message: "Timeline posts fetched.",
+    data: data,
+  });
+  if (!data) {
+    res.status(500);
+    throw new Error("Server side error.");
+  }
+});
 
 //@desc Get all Posts
 //@route POST /post/allposts
@@ -181,7 +189,7 @@ const getAllPosts = asyncHandler(async (req, res) => {
     console.log(posts, "all post retrieved");
     res.status(200).json({
       status: "success",
-      data: posts,  
+      data: posts,
       message: "All posts fetched successfully.",
     });
   } catch (error) {
@@ -191,10 +199,118 @@ const getAllPosts = asyncHandler(async (req, res) => {
   }
 });
 
+//@desc Like/Unlike a post
+//@route PUT /:id/like
+//@access Private
+
+const likePost = asyncHandler(async (req, res) => {
+  console.log("like post call at server");
+  const postId = req.params.id;
+  const userId = req.userId;
+  if (!postId) {
+    res.status(402);
+    throw new Error("Error getting parameters.");
+  }
+
+  const post = await Post.findById(postId);
+  if (!post) {
+    res.status(404);
+    throw new Error("Error retrieving post data from DB");
+  }
+
+  if (post.likes.includes(userId)) {
+    await post.updateOne({ $pull: { likes: userId } });
+    res.status(200).json({
+      status: "success",
+      message: "Post Unliked",
+    });
+  } else {
+    await post.updateOne({ $push: { likes: userId } });
+    res.status(200).json({
+      status: "success",
+      message: "Post Liked",
+    });
+  }
+});
+
+//@desc Get profile posts
+//@route GET /profile-posts/:id
+//@access Private
+const getProfilePosts = asyncHandler(async (req, res) => {
+  console.log("GET PROFILE POSTS CALL REACHED SERVER");
+  const userId = req.params.id;
+  console.log(userId, "userId recieved at server");
+  if (!userId) {
+    res.status(402);
+    throw new Error("Error getting parameters.");
+  }
+  const posts = await Post.find({ userId: userId }).populate("userId");
+  if (!posts) {
+    res.status(400);
+    throw new Error("Error getting posts.");
+  }
+  res.status(200).json({
+    status: "success",
+    data: posts,
+    message: "Profile Posts fetched successfully.",
+  });
+});
+
+//@desc Add new comment
+//@route POST /:id/comment
+//@access Private
+const addNewComment = asyncHandler(async (req, res) => {
+  console.log("ADD NEW COMMENT CALL REACHED SERVER");
+  const userId = req.userId;
+  const postId = req.params.id;
+  const { comment } = req.body;
+  if (!userId || !postId) {
+    res.status(400);
+    throw new Error("Error getting parameters.");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(postId))
+    throw new Error("No post with this id!");
+
+  const { username, profilePic } = await User.findById(userId, {
+    username: 1,
+    profilePic: 1,
+  });
+
+  const post = await Post.findByIdAndUpdate(
+    postId,
+    {
+      $push: {
+        comments: {
+          commentedUserId: userId,
+          commentedUsername: username,
+          commentedUserpic: profilePic,
+          comment: comment,
+          time: new Date().toISOString(),
+        },
+      },
+    },
+    { new: true }
+  );
+
+  if(post){
+    res.status(200).json({
+      status: 'success',
+      message: 'Commented successfully',
+      data: post.comments[length - 1]
+  })
+  }else{
+    res.status(500)
+    throw new Error("Error adding comment.")
+  }
+});
+
 module.exports = {
   newPost,
   getAllPosts,
   updatePost,
   deletePost,
-  getTimelinePosts
+  getTimelinePosts,
+  likePost,
+  getProfilePosts,
 };

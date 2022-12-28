@@ -1,0 +1,17 @@
+.otpContainer{
+    display: flex;
+    gap: 1rem;
+    height: 1rem;
+    width: 40%;
+    margin-top: 6px;
+}
+.otpInput{
+    width: 40px;
+    border: none;
+    outline: none;
+    background-color: var(--inputColor);
+    border-radius: 8px;
+    padding: 10px;
+    flex: 1;
+    text-align: center;
+}

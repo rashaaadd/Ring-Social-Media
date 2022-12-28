@@ -2,8 +2,20 @@ import React, { useState } from "react";
 import "./InfoCard.css";
 import { UilPen } from "@iconscout/react-unicons";
 import ProfileModal from "../ProfileModal/ProfileModal";
+import { useNavigate } from 'react-router-dom'
+import { useDispatch } from "react-redux";
+import { resetUser } from "../../redux/userSlice";
 
 function InfoCard() {
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
+
+  const handleLogout = () => {
+    dispatch(resetUser(null))
+    localStorage.clear()
+    navigate('/')
+  }
+
   const [modalOpened, setModalOpened] = useState(false);
   return (
     <div className="InfoCard">
@@ -41,7 +53,7 @@ function InfoCard() {
         <span> Brototype</span>
       </div>
 
-      <button className="button logout-btn">Logout</button>
+      <button className="button logout-btn" onClick={()=>handleLogout()}>Logout</button>
     </div>
   );
 }

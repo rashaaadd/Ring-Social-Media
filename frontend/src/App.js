@@ -9,6 +9,7 @@ import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/protectedRoute";
 import PublicRoutes from "./components/publicRoutes";
 import { fetchUserById } from "./redux/userSlice"
+import ResetPass from "./pages/ResetPass/ResetPass";
 
 function App() {
   const dispatch = useDispatch();
@@ -16,10 +17,10 @@ function App() {
   const { user } = useSelector(state => state.users);
   const { loading } = useSelector((state) => state.alerts);
   useEffect(() => {
-    if(!user){
+    if(!user && token){
       dispatch(fetchUserById(token));
     }
-  }, [user])
+  }, [user,token])
   return (
     <BrowserRouter>
       <div className="App">
@@ -30,11 +31,12 @@ function App() {
         )}
         <Toaster position="top-center" reverseOrder={false} />
         <div className="blur" style={{ top: "-18%", right: "0" }}></div>
-        <div className="blur" style={{ top: "36%", left: "-8rem" }}></div>
+        <div className="blur" style={{ top: "40%", left: "-8rem" }}></div>
         <Routes>
           <Route path="/" element={<PublicRoutes><Auth /></PublicRoutes>} />
           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/profile/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/reset-password" element= {<PublicRoutes><ResetPass /></PublicRoutes>} />
         </Routes>
       </div>
     </BrowserRouter>

@@ -1,5 +1,4 @@
-import React from 'react'
-import FollowersCard from '../FollowersCard/FollowersCard';
+import React from 'react' 
 import LogoSearch from '../LogoSearch/LogoSearch';
 import ProfileCard from '../ProfileCard/ProfileCard';
 import './ProfileSide.css'
@@ -8,8 +7,7 @@ function ProfileSide() {
   return (
     <div className='ProfileSide'>
       <LogoSearch/>
-      <ProfileCard/>
-      <FollowersCard/>
+      <ProfileCard path='homePage'/>
     </div>
 
     
