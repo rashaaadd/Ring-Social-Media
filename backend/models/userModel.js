@@ -75,6 +75,10 @@ const userSchema = mongoose.Schema(
     },
     cover_cloudinary_id:{
       type: String
+    },
+    isBlocked:{
+      type:Boolean,
+      default:false,
     }
   },
   {

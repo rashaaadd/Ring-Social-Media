@@ -12,7 +12,9 @@ const {
     getAllUsers,
     getOTP,
     verifyOTP,
-    resetPassword
+    resetPassword,
+    getFollowingUsers,
+    getFollowersUsers
 } = require('../controllers/userControllers');
 
 
@@ -43,6 +45,11 @@ router.post('/:id',protect,upload.fields([{
 router.get('/allusers',protect,getAllUsers)
 
 router.route('/:id/follow').put(protect,followUser)
+
+router.get('/:id/following-users',protect,getFollowingUsers)
+
+router.get('/:id/follower-users',protect,getFollowersUsers)
+
 
 
 

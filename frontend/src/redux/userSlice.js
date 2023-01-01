@@ -24,7 +24,7 @@ export const userSlice = createSlice({
     user: null,
   },
   reducers: {
-    setUser: (state) => {
+    setUser: (state,action) => {
       state.user = action.payload.data;
     },
     resetUser: (state) => {
@@ -33,14 +33,14 @@ export const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchUserById.pending, (state, action) => {
+      .addCase(fetchUserById.pending, (state) => {
         state.loading = true;
       })
       .addCase(fetchUserById.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.data.user;
       })
-      .addCase(fetchUserById.rejected, (state, action) => {
+      .addCase(fetchUserById.rejected, (state) => {
         state.loading = false;
         localStorage.clear();
         state.user = null;

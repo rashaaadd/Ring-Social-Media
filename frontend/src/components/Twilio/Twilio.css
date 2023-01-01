@@ -15,3 +15,9 @@
     flex: 1;
     text-align: center;
 }
+.otpText{
+    font-size: 12px;
+    align-self: center;
+    width: 80%;
+    /* style={{ fontSize: "12px", alignSelf: "center", width: "80%" }} */
+}

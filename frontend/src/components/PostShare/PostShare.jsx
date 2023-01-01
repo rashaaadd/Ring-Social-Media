@@ -3,13 +3,12 @@ import ProfileImg from "../../img/profileImg.jpg";
 import "./PostShare.css";
 import { UilScenery } from "@iconscout/react-unicons";
 import { UilPlayCircle } from "@iconscout/react-unicons";
-import { UilLocationPoint } from "@iconscout/react-unicons";
 import { UilSchedule } from "@iconscout/react-unicons";
 import { UilTimes } from "@iconscout/react-unicons";
 import { useRef } from "react";
 import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { POSTS, POSTS_POST } from "../../axios";
+import { POSTS_POST } from "../../axios";
 import { hideLoading, showLoading } from "../../redux/alertSlice";
 import { Image } from 'cloudinary-react'
 import { fetchUserById } from "../../redux/userSlice";
@@ -18,6 +17,7 @@ import { fetchUserById } from "../../redux/userSlice";
 function PostShare({data}) {
   const { posts, setPosts } = data
   const loading = useSelector((state) => state.alerts.loading)
+  const {user} = useSelector((state) => state.users)
   const [image, setImage] = useState({});
   const [displayImage, setDisplayImage] = useState({})
   const imageRef = useRef();
@@ -58,6 +58,9 @@ function PostShare({data}) {
         setPosts([response.data.data,...posts])
         reset();
         dispatch(fetchUserById());
+      }else{
+        toast.success(response.data.message)
+        console.log(response,'Multer error')
       }
     } catch (error) {
       dispatch(hideLoading())
@@ -72,7 +75,7 @@ function PostShare({data}) {
 
   return (
     <div className="PostShare">
-      <img src={ProfileImg} alt="ProfileImage" />
+      <img src={user?.profilePic ? user.profilePic : ProfileImg} alt="ProfilePic" />
       <form encType="multipart/form-data" onSubmit={handleSubmitPostUpload}>
         <input type="text" placeholder="What's happening" name="desc" value={formData.desc} onChange={handleChange}/>
         <div className="postOptions">
@@ -87,10 +90,6 @@ function PostShare({data}) {
           <div className="option" style={{ color: "var(--video)" }}>
             <UilPlayCircle />
             Video
-          </div>
-          <div className="option" style={{ color: "var(--location)" }}>
-            <UilLocationPoint />
-            Location
           </div>
           <div className="option" style={{ color: "var(--schedule)" }}>
             <UilSchedule />
@@ -109,7 +108,10 @@ function PostShare({data}) {
         </div>
         {displayImage && (
           <div className="previewImage">
-            <UilTimes onClick={() => setImage(null)} />
+            <UilTimes onClick={() => {
+              setImage(null)
+              setDisplayImage(null)
+            }} />
             <Image src={`${displayImage.image}`} alt="" />
           </div>
         )}

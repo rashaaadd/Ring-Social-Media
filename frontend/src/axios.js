@@ -57,3 +57,14 @@ POSTS.interceptors.request.use(
 
 export const POSTS_GET = POSTS.get;
 export const POSTS_POST = POSTS.post;
+
+
+
+
+export const ADMIN = axios.create({
+    baseURL: "http://localhost:5000/admin"
+})
+
+export const ADMIN_GET = ADMIN.get;
+export const ADMIN_POST = ADMIN.post;
+export const ADMIN_PUT = ADMIN.put;

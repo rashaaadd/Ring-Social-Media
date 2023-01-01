@@ -20,7 +20,7 @@ app.use(express.urlencoded({ limit: '50mb',extended: false }))
 
 app.use('/',userRoute)
 app.use('/post',postRoute)
-// app.use('/admin',adminRoute)
+app.use('/admin',adminRoute)
 
 
 app.use(errorHandler)

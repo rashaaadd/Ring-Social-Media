@@ -4,7 +4,11 @@ import Cover from "../../img/cover.jpg";
 import Profile from "../../img/profileImg.jpg";
 import { fetchUserById } from "../../redux/userSlice";
 import "./ProfileCard.css";
+import { hideLoading, showLoading } from "../../redux/alertSlice";
 import { Link, useLocation } from "react-router-dom";
+import { USER_API } from "../../axios";
+import UsersModal from "../UsersModal/UsersModal";
+import toast from 'react-hot-toast'
 
 function ProfileCard({ path }) {
   const token = localStorage.getItem("token");
@@ -12,6 +16,45 @@ function ProfileCard({ path }) {
   const dispatch = useDispatch();
   const location = useLocation();
   const [profiledata, setProfiledata] = useState(null);
+  const [followingUsers, setFollowingUsers] = useState(null);
+  const [followerUsers, setFollowerUsers] = useState(null);
+  const [usermodalOpened, setUserModalOpened] = useState(false);
+  const [followerUsermodalOpened, setFollowerUserModalOpened] = useState(false);
+
+  const getFollowingUsers = async (id) => {
+    try {
+      dispatch(showLoading());
+      const response = await USER_API.get(`/${id}/following-users`);
+      dispatch(hideLoading());
+      if (response.status === 200) {
+        console.log(response,'sadasdadasasa')
+        setFollowingUsers(response.data.data);
+        setUserModalOpened(true);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
+  };
+
+  const getFollowerUsers = async (id) => {
+    try {
+      dispatch(showLoading());
+      const response = await USER_API.get(`/${id}/follower-users`);
+      dispatch(hideLoading());
+      if (response.status === 200) {
+        setFollowerUsers(response.data.data);
+        setFollowerUserModalOpened(true);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -19,8 +62,9 @@ function ProfileCard({ path }) {
     }
     if (location.state) {
       setProfiledata(location.state);
-    }
-  }, [user, location.state]);
+      dispatch(fetchUserById(token))
+    } 
+  }, [location.state]);
   return (
     <div className="ProfileCard">
       {profiledata ? (
@@ -67,15 +111,35 @@ function ProfileCard({ path }) {
         <hr />
         {profiledata ? (
           <div>
-            <div className="follow">
+            <div
+              className="follow"
+              onClick={() => {
+                getFollowingUsers(profiledata._id);
+              }}
+            >
               <span>{profiledata?.following?.length}</span>
               <span>Following</span>
             </div>
+            <UsersModal
+              usermodalOpened={usermodalOpened}
+              setUserModalOpened={setUserModalOpened}
+              data={followingUsers}
+            />
             <div className="vl"></div>
-            <div className="follow">
+            <div
+              className="follow"
+              onClick={() => {
+                getFollowerUsers(profiledata._id);
+              }}
+            >
               <span>{profiledata?.followers?.length}</span>
               <span>Followers</span>
             </div>
+            <UsersModal
+              usermodalOpened={followerUsermodalOpened}
+              setUserModalOpened={setFollowerUserModalOpened}
+              data={followerUsers}
+            />
 
             {path === "profilePage" && (
               <>
@@ -89,15 +153,30 @@ function ProfileCard({ path }) {
           </div>
         ) : (
           <div>
-            <div className="follow">
+            <div className="follow" onClick={() => getFollowingUsers(user._id)}>
               <span>{user?.following?.length}</span>
               <span>Following</span>
             </div>
+            <UsersModal
+              usermodalOpened={usermodalOpened}
+              setUserModalOpened={setUserModalOpened}
+              data={followingUsers}
+            />
             <div className="vl"></div>
-            <div className="follow">
+            <div
+              className="follow"
+              onClick={() => {
+                getFollowerUsers(user._id);
+              }}
+            >
               <span>{user?.followers?.length}</span>
               <span>Followers</span>
             </div>
+            <UsersModal
+              usermodalOpened={followerUsermodalOpened}
+              setUserModalOpened={setFollowerUserModalOpened}
+              data={followerUsers}
+            />
 
             {path === "profilePage" && (
               <>

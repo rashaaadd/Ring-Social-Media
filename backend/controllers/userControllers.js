@@ -78,7 +78,7 @@ const registerUser = asyncHandler(async (req, res) => {
 //@route POST /password/reset
 //access /public
 const getOTP = asyncHandler(async (req, res) => {
-  console.log("GET OTP CALL AT SERVER")
+  console.log("GET OTP CALL AT SERVER");
   console.log(req.body, "req bodyyyyyy");
   const { phone } = req.body;
   if (!phone) {
@@ -109,7 +109,7 @@ const getOTP = asyncHandler(async (req, res) => {
 //access /public
 
 const verifyOTP = asyncHandler(async (req, res) => {
-  console.log("VERIFY OTP CALL AT SERVER")
+  console.log("VERIFY OTP CALL AT SERVER");
   console.log(req.body, "req bodyyyyyy");
   const { otp1, otp2, otp3, otp4, otp5, otp6, userData } = req.body;
   const otp = otp1 + otp2 + otp3 + otp4 + otp5 + otp6;
@@ -142,7 +142,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
 //access public
 
 const resetPassword = asyncHandler(async (req, res) => {
-  console.log("RESET PASSWORD CALL AT SERVER")
+  console.log("RESET PASSWORD CALL AT SERVER");
   const userId = req.params.id;
   const { password } = req.body;
   console.log(userId, "............", password);
@@ -186,7 +186,12 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findOne({ email }).select("+password");
+  
   if (user && (await bcrypt.compare(password, user.password))) {
+    if(user.isBlocked){
+      res.status(403)
+      throw new Error("Account Blocked.")
+    }
     res.status(200).json({
       status: "success",
       data: {
@@ -207,7 +212,7 @@ const loginUser = asyncHandler(async (req, res) => {
 //@route GET /user
 //access /private
 const getUser = asyncHandler(async (req, res) => {
-  console.log("GET USER CALL AT SERVER")
+  console.log("GET USER CALL AT SERVER");
   try {
     const user = await User.findById(req.userId).select("-password");
     if (!user) {
@@ -232,68 +237,72 @@ const getUser = asyncHandler(async (req, res) => {
 //@route PUT /:id
 //access /private
 
-const updateUser = asyncHandler(async (req, res) => {
-  console.log("UPDATE USER AT SERVER")
+const updateUser = asyncHandler(async (req, res) => { 
+  console.log("UPDATE USER AT SERVER");
+  console.log(req.files, "adadsadsa");
   const userId = req.params.id;
-  const profilePic = req.files.profile[0]
-  const coverPic = req.files.cover[0];
-
-  if (!userId) {
+  if (!userId || req.body === {}) {
     res.status(400);
-    throw new Error("User data not acquired");
+    throw new Error("Invalid data");
   }
   if (userId !== req.userId) {
     res.status(500);
     throw new Error("Access denied.");
   }
-  if(!profilePic || !coverPic || !req.body) {
-    res.status(400);
-    throw new Error("Please add all fields.");
+  if (req.files.profile || req.files.cover) {
+    console.log("hello");
+    const profilePic = req.files.profile[0];
+    const coverPic = req.files.cover[0];
+    console.log(profilePic, "......", coverPic);
+    if (profilePic) {
+      const profileResult = await cloudinary.uploader.upload(profilePic?.path, {
+        upload_preset: "ring-cloud",
+      });
+      req.body.profile_cloudinary_id = profileResult.public_id;
+      req.body.profilePic = profileResult?.secure_url;
+    }
+    if (coverPic) {
+      const coverResult = await cloudinary.uploader.upload(coverPic?.path, {
+        upload_preset: "ring-cloud",
+      });
+      req.body.cover_cloudinary_id = coverResult.public_id;
+      req.body.coverPic = coverResult?.secure_url;
+    }
   }
-
-  const profileResult = await cloudinary.uploader.upload(profilePic?.path, {
-    upload_preset: "ring-cloud",
-  });
-  const coverResult = await cloudinary.uploader.upload(coverPic?.path, {
-    upload_preset: "ring-cloud",
-  });
-  req.body.profile_cloudinary_id = profileResult.public_id
-  req.body.cover_cloudinary_id = coverResult.public_id
-  req.body.profilePic = profileResult?.secure_url
-  req.body.coverPic = coverResult?.secure_url
-  const details = {}
-  details.dob = req.body.dob? req.body.dob : null
-  details.relation = req.body.relation? req.body.relation : null
-  details.bio = req.body.bio? req.body.bio : null
-  details.work = req.body.work? req.body.work : null
-  details.gender = req.body.gender? req.body.gender : null
-  details.city = req.body.city? req.body.city : null
-  details.country = req.body.country? req.body.country : null
-  req.body.details = details
-  
-  const user = await User.findByIdAndUpdate(userId, req.body, {
+  // if (!req.body.details) {
+  //   const details = {};
+  //   details.dob = req.body.dob ? req.body.dob : null;
+  //   details.relation = req.body.relation ? req.body.relation : null;
+  //   details.bio = req.body.bio ? req.body.bio : null;
+  //   details.work = req.body.work ? req.body.work : null;
+  //   details.gender = req.body.gender ? req.body.gender : null;
+  //   details.city = req.body.city ? req.body.city : null;
+  //   details.country = req.body.country ? req.body.country : null;
+  //   req.body.details = details;
+  // }
+  console.log("brrrr");
+  const user = await User.findByIdAndUpdate({ _id: userId }, req.body, {
     new: true,
   });
-  console.log(user,'dsashahsdk')
-  if(user){
+  console.log(user, "dsashahsdk");
+  if (user) {
     res.status(201).json({
       status: "success",
       data: user,
       message: "User updated successfully",
     });
-  }else{
+  } else {
     console.log(error);
     res.status(502);
     throw new Error("Error updating user.");
   }
-  
 });
 
 //@desc Delete user
 //@route DELETE /user
 //access /private
 const deleteUser = asyncHandler(async (req, res) => {
-  console.log('DELETE USER AT SERVER')
+  console.log("DELETE USER AT SERVER");
   const userId = req.params.id;
 
   // if(userId === req.user._id){
@@ -323,7 +332,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 //@route PUT /follow/:id
 //access /private
 const followUser = asyncHandler(async (req, res) => {
-  console.log('FOLLOW/UNFOLLOW USER AT SERVER')
+  console.log("FOLLOW/UNFOLLOW USER AT SERVER");
   const followUserId = req.params.id;
   const userId = req.userId;
   if (userId === followUserId) {
@@ -362,7 +371,7 @@ const followUser = asyncHandler(async (req, res) => {
 //access /public
 
 const getAllUsers = asyncHandler(async (req, res) => {
-  console.log('GET ALL USER AT SERVER')
+  console.log("GET ALL USER AT SERVER");
   const userId = req.userId;
   try {
     const users = await User.find({ _id: { $ne: userId } });
@@ -378,6 +387,56 @@ const getAllUsers = asyncHandler(async (req, res) => {
   }
 });
 
+//@desc Get following users
+//@route GET /:id/following-users
+//access /public
+const getFollowingUsers = asyncHandler(async (req, res) => {
+  console.log("GET FOLLOWING USERS AT SERVER");
+  const userId = req.params.id;
+  console.log(userId, "userId");
+  if (!userId) {
+    res.status(400);
+    throw new Error("Missing Parameters");
+  }
+  const user = await User.findById(userId).populate("following");
+  if (!user) {
+    res.status(400);
+    throw new Error("No user found.");
+  }
+  const followingUsers = user?.following;
+  console.log(followingUsers, "sdadsadasd");
+  res.status(200).json({
+    status: "success",
+    data: followingUsers,
+    message: "Users found",
+  });
+});
+
+//@desc Get follower users
+//@route GET /:id/follower-users
+//access /public
+const getFollowersUsers = asyncHandler(async (req, res) => {
+  console.log("GET FOLLOWER USERS AT SERVER");
+  const userId = req.params.id;
+  console.log(userId, "userId");
+  if (!userId) {
+    res.status(400);
+    throw new Error("Missing Parameters");
+  }
+  const user = await User.findById(userId).populate("followers");
+  if (!user) {
+    res.status(400);
+    throw new Error("No user found.");
+  }
+  const followerUsers = user?.followers;
+  console.log(followerUsers, "sdadsadasd");
+  res.status(200).json({
+    status: "success",
+    data: followerUsers,
+    message: "Users found",
+  });
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -389,4 +448,6 @@ module.exports = {
   getOTP,
   verifyOTP,
   resetPassword,
+  getFollowingUsers,
+  getFollowersUsers,
 };

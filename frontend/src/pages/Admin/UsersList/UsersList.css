@@ -1,0 +1,12 @@
+.userRow{
+    display: flex;
+    justify-content: flex-start;
+
+    background: var(--cardColor);
+    padding: 10px;
+}
+
+.userRow>span{
+    justify-self: flex-start;
+    align-self: flex-start;
+}

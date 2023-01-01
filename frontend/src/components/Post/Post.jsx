@@ -16,16 +16,38 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 // eslint-disable-next-line
-import { format } from 'timeago.js';
+import { format } from "timeago.js";
 import EditModal from "../EditModal/EditModal";
+import CommentModal from "../CommentModal.js/CommentModal";
 
 function Post({ data, id }) {
   const token = localStorage.getItem("token");
   const dispatch = useDispatch();
+  const [postDetails, setPostDetails] = useState(data)
   const { user } = useSelector((state) => state.users);
   const [liked, setLiked] = useState(data?.likes?.includes(user?._id));
   const [likes, setLikes] = useState(data?.likes?.length);
-  const [ editmodalOpened, setEditModalOpened ] = useState(false)
+  const [editmodalOpened, setEditModalOpened] = useState(false);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [comments, setComments] = useState([]);
+
+  const handleComment = async (id) => {
+    try {
+      dispatch(showLoading());
+      const response = await POSTS_API.get(`/${id}/comments`);
+      dispatch(hideLoading());
+      if (response.data.status) {
+        setComments(response.data.data);
+        setCommentModalOpen(true);
+      } else {
+        console.log(response, "Error");
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response.data.message);
+    }
+  };
   const handleLike = async (id) => {
     try {
       setLiked((prev) => !prev);
@@ -33,7 +55,6 @@ function Post({ data, id }) {
       const response = await POSTS_API.put(`/${id}/like`);
       dispatch(hideLoading());
       if (response.data.status) {
-        toast.success(response.data.message);
         liked ? setLikes((prev) => prev - 1) : setLikes((prev) => prev + 1);
       } else {
         toast.error(response.data.message);
@@ -61,41 +82,49 @@ function Post({ data, id }) {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const handleMenuClick = async(option, postId) => {
+  const handleMenuClick = async (option, postId) => {
     switch (option) {
       case "Delete":
         try {
           dispatch(showLoading());
           const response = await POSTS_API.delete(`/${postId}`);
-          console.log(response,'response of deleting a post')
-          dispatch(hideLoading())
-          if(response.status){
+          console.log(response, "response of deleting a post");
+          dispatch(hideLoading());
+          if (response.status) {
             toast.success(response.data.message);
-            document.getElementById(postId).style.display = 'none';
+            document.getElementById(postId).style.display = "none";
             setAnchorEl(null);
             dispatch(fetchUserById(token));
-          }else{
-            console.log('11111111')
+            break;
+          } else {
+            console.log("11111111");
             toast.error(response.response.data.message);
+            break;
           }
         } catch (error) {
-          console.log('hiii')
-          dispatch(hideLoading())
+          console.log("hiii");
+          dispatch(hideLoading());
           console.log(error);
           toast.error(error.response.data.message);
+          break;
         }
       case "Edit":
         try {
           setEditModalOpened(true);
           setAnchorEl(null);
+          dispatch(fetchUserById(token));
+          break;
         } catch (error) {
           console.log(error);
           toast.error(error.response.data.message);
+          break;
         }
+      default:
+        break;
     }
   };
   return (
-    <div className="Post" key={data?._id} id={data?._id}>
+    <div className="Post" key={postDetails?._id} id={postDetails?._id}>
       <IconButton
         aria-label="more"
         id="long-button"
@@ -118,23 +147,28 @@ function Post({ data, id }) {
           style: {
             maxHeight: ITEM_HEIGHT * 4.5,
             width: "12ch",
-            left: "2ch"
+            left: "2ch",
           },
         }}
       >
         {options.map((option) => (
           <MenuItem
             key={option}
-            onClick={() => handleMenuClick(option, data?._id)}
+            onClick={() => handleMenuClick(option, postDetails?._id)}
             style={{ fontSize: "0.8rem", fontFamily: "Montserrat" }}
           >
             {option}
           </MenuItem>
         ))}
       </Menu>
-      <EditModal editmodalOpened={editmodalOpened} setEditModalOpened={setEditModalOpened} data={data}/>
+      <EditModal
+        editmodalOpened={editmodalOpened}
+        setEditModalOpened={setEditModalOpened}
+        postDetails={postDetails}
+        setPostDetails={setPostDetails}
+      />
 
-      <img src={data?.images} alt="PostImage" />
+      <img src={postDetails?.images} alt="PostImage" />
 
       <div className="postReact">
         <img
@@ -145,13 +179,15 @@ function Post({ data, id }) {
               ? { width: "25px", height: "25px", cursor: "pointer" }
               : { width: "25px", height: "20px", cursor: "pointer" }
           }
-          onClick={() => handleLike(data?._id)}
+          onClick={() => handleLike(postDetails?._id)}
         />
         <img
           src={Comment}
           alt=""
           style={{ width: "22px", height: "22px", cursor: "pointer" }}
+          onClick={() => handleComment(postDetails?._id)}
         />
+
         <img
           src={Share}
           alt=""
@@ -164,12 +200,49 @@ function Post({ data, id }) {
       </span>
       <div className="details">
         <span>
-          <b>{data?.userId?.username} </b>
+          <b>{postDetails?.userId?.username} </b>
         </span>
-        <span> {data?.desc}</span>
+        <span> {postDetails?.desc}</span>
       </div>
-      <span style={{ color: "var(--gray) ", fontSize: "10px" }}>{format(data?.createdAt)}</span>
-
+      <CommentModal
+        comments={comments}
+        setComments={setComments}
+        commentModalOpen={commentModalOpen}
+        setCommentModalOpen={setCommentModalOpen}
+        data={postDetails}
+      />
+      <div>
+        {postDetails?.comments?.length > 0 ? (
+          postDetails?.comments.slice(0, 2).map((comment, id) => {
+            return (
+              <>
+                <div
+                  className="details"
+                  key = {id}
+                  style={{ fontSize: "13px", marginTop:'-15px',lineHeight:2.5 }}
+                >
+                  <span>
+                    <b>{comment?.commentedUserName}</b>
+                  </span>
+                  <span style={{ marginLeft: "5px" }}>{comment?.comment}</span>
+                  <br />
+                </div>
+              </>
+            );
+          })
+        ) : (
+          <span style={{ fontSize: "12px" }}>No Comments</span>
+        )}
+        {postDetails?.comments?.length>0 && (<span
+          style={{ cursor: "pointer", fontSize: "14px" }}
+          onClick={() => handleComment(postDetails._id)}
+        >
+          View all comments
+        </span>)}
+      </div>
+      <span style={{ color: "var(--gray) ", fontSize: "10px",marginTop:'-10px' }}>
+        {format(postDetails?.createdAt)}
+      </span>
     </div>
   );
 }

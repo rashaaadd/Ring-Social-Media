@@ -7,9 +7,14 @@ import Home from "./pages/Home/Home";
 import { Toaster } from "react-hot-toast";
 import Profile from "./pages/Profile/Profile";
 import ProtectedRoute from "./components/protectedRoute";
-import PublicRoutes from "./components/publicRoutes";
+import PublicRoute from "./components/publicRoutes";
 import { fetchUserById } from "./redux/userSlice"
 import ResetPass from "./pages/ResetPass/ResetPass";
+import AdminPublicRoute from "./components/AdminPublicRoutes";
+import AdminLogin from "./pages/Admin/AdminLogin/AdminLogin";
+import AdminHome from "./pages/Admin/AdminHome/AdminHome";
+import AdminProtectedRoute from "./components/AdminProtectedRoutes";
+import UsersList from "./pages/Admin/UsersList/UsersList";
 
 function App() {
   const dispatch = useDispatch();
@@ -33,10 +38,14 @@ function App() {
         <div className="blur" style={{ top: "-18%", right: "0" }}></div>
         <div className="blur" style={{ top: "40%", left: "-8rem" }}></div>
         <Routes>
-          <Route path="/" element={<PublicRoutes><Auth /></PublicRoutes>} />
+          <Route path="/" element={<PublicRoute><Auth /></PublicRoute>} />
           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/profile/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/reset-password" element= {<PublicRoutes><ResetPass /></PublicRoutes>} />
+          <Route path="/reset-password" element= {<PublicRoute><ResetPass /></PublicRoute>} />
+          <Route path="/admin" element={<AdminPublicRoute><AdminLogin /></AdminPublicRoute>} />
+          <Route path="/admin/home" element={<AdminProtectedRoute><AdminHome /></AdminProtectedRoute>} />
+          <Route path="/admin/users" element={<AdminProtectedRoute><UsersList /></AdminProtectedRoute>} />
+
         </Routes>
       </div>
     </BrowserRouter>

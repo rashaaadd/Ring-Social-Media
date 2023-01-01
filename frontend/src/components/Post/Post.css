@@ -1,7 +1,7 @@
 .Post{
     display: flex;
     flex-direction: column;
-    padding: 1rem;
+    padding: 0.5rem 1.5rem;
     background-color: var(--cardColor);
     border-radius: 1rem;
     gap: 1rem;

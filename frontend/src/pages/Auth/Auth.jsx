@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import Logo from "../../img/logo1.png";
 import { hideLoading, showLoading } from "../../redux/alertSlice";
-import { USER_API_GET, USER_API_POST } from "../../axios";
+import { USER_API_POST } from "../../axios";
 import LockResetIcon from "@mui/icons-material/LockReset";
 import Twilio from "../../components/Twilio/Twilio";
 
@@ -29,7 +29,7 @@ function Auth() {
     e.preventDefault();
     if (signup) {
       try {
-        if (formData.password == formData.confirmPass) {
+        if (formData.password === formData.confirmPass) {
           dispatch(showLoading());
           const response = await USER_API_POST("/register", formData);
           dispatch(hideLoading());
@@ -250,7 +250,7 @@ function Auth() {
           </div>
           <div className="a-right">
             {otpPage ? (
-              <Twilio data={{userData}}/>
+              <Twilio userData={userData}/>
             ) : (
               <form
                 onSubmit={handlePassFormSubmit}

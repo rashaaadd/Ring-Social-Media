@@ -15,8 +15,9 @@ function FollowersCard() {
   const navigate = useNavigate()
   const  {user}  = useSelector((state) => state.users)
   const [followers, setFollowers ] = useState([])
+
+
   const handleProfileClick = (e,data) => {
-    console.log(data,'hello')
     navigate(`/profile/${data?.username}`,{state:data})
   }
   useEffect(() => {

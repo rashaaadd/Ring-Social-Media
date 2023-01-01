@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import './RightSide.css'
 import Home from '../../img/home.png'
 import Noti from '../../img/noti.png'
@@ -7,7 +7,6 @@ import FollowersCard from '../FollowersCard/FollowersCard'
 import { Link } from 'react-router-dom'
 
 function RightSide() {
-  // const [modalOpened, setModalOpened] = useState(false);
   return (
     <div className="RightSide">
         <div className="navIcons">

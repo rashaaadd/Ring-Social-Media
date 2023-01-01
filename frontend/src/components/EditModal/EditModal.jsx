@@ -4,16 +4,17 @@ import { useDispatch } from 'react-redux';
 import { hideLoading, showLoading } from '../../redux/alertSlice';
 import { POSTS_API, POSTS_POST } from '../../axios';
 import { toast } from 'react-hot-toast';
+import { fetchUserById } from '../../redux/userSlice';
 
 
-function EditModal({ editmodalOpened, setEditModalOpened,data }) {
+function EditModal({ editmodalOpened, setEditModalOpened,postDetails,setPostDetails }) {
     const theme = useMantineTheme();
     const dispatch = useDispatch();
-
+    const token = localStorage.getItem('token')
     const [ formData, setFormData ] = useState({
         desc:''
     })
-
+  
     const handleChange = (e) => {
         const name = e.target.name;
         const value = e.target.value;
@@ -25,11 +26,15 @@ function EditModal({ editmodalOpened, setEditModalOpened,data }) {
         console.log(formData)
         try {
             dispatch(showLoading())
-            const response = await POSTS_API.put(`/${data?._id}`,formData)
+            const response = await POSTS_API.put(`/${postDetails?._id}`,formData)
             dispatch(hideLoading())
             if(response.data.status){
+                setPostDetails(response.data.data)
+                dispatch(fetchUserById(token))
                 toast.success(response.data.message)
                 setEditModalOpened(false)
+            }else{
+              toast.error(response.data.message)
             }
         } catch (error) {
             console.log(error)
@@ -38,6 +43,7 @@ function EditModal({ editmodalOpened, setEditModalOpened,data }) {
             setEditModalOpened(false)
         }
     }
+
     return (
         <Modal
           overlayColor={
@@ -58,7 +64,7 @@ function EditModal({ editmodalOpened, setEditModalOpened,data }) {
                 type="text"
                 className="infoInput"
                 name="desc"
-                placeholder={data?.desc}
+                placeholder={postDetails?.desc}
                 onChange={handleChange}
               />
             </div>

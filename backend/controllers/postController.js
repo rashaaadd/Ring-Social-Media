@@ -9,27 +9,39 @@ const mongoose = require("mongoose");
 //@access Private
 const newPost = asyncHandler(async (req, res) => {
   console.log("New post creation call reached at server.");
-  const image = req.file;
-  console.log(image, "afsdffdasdfa ");
+  let image;
   const { desc } = req.body;
   const userId = req.userId;
-  if (!desc || !image) {
-    res.status(404);
-    throw new Error("Upload data not found.");
-  }
+  // if (!desc || !image) {
+  //   res.status(404);
+  //   throw new Error("Upload data not found.");
+  // }
+  let user,post;
   try {
-    const result = await cloudinary.uploader.upload(image?.path, {
-      upload_preset: "ring-cloud",
-    });
-    const user = await User.findById({ _id: userId });
-    let post = await Post.create({
-      userId,
-      userName: user.name,
-      desc,
-      images: result.secure_url,
-      cloudinary_id: result.public_id,
-      time: new Date().toUTCString(),
-    });
+    if(req.file){
+      image = req.file;
+      const result = await cloudinary.uploader.upload(image?.path, {
+        upload_preset: "ring-cloud",
+      });
+      user = await User.findById({ _id: userId });
+      post = await Post.create({
+        userId,
+        userName: user.username,
+        desc,
+        images: result?.secure_url ? result.secure_url : null,
+        cloudinary_id: result.public_id,
+        time: new Date().toUTCString(),
+      });
+    }else{
+      user = await User.findById({ _id: userId });
+      post = await Post.create({
+        userId,
+        userName: user.username,
+        desc,
+        time: new Date().toUTCString(),
+      });
+    } 
+    
     post = await Post.findById(post._id).populate("userId");
     console.log(post, "post created at server");
     user.posts.push(post._id);
@@ -59,7 +71,10 @@ const updatePost = asyncHandler(async (req, res) => {
     res.status(403);
     throw new Error("Access Forbidden.");
   }
-  const updatedPost = await post.updateOne({ $set: req.body });
+  let updatedPost = await post.updateOne({ $set: req.body });
+  updatedPost = await Post.findById(postId).populate('userId');
+
+
   if (updatedPost) {
     res.status(200).json({
       status: "success",
@@ -257,11 +272,13 @@ const getProfilePosts = asyncHandler(async (req, res) => {
 });
 
 //@desc Add new comment
-//@route POST /:id/comment
+//@route POST /:id/comments
 //@access Private
 const addNewComment = asyncHandler(async (req, res) => {
   console.log("ADD NEW COMMENT CALL REACHED SERVER");
+  console.log(req.body,'sdjhasdjahsdha11......')
   const userId = req.userId;
+  console.log(userId,'d1111111brrrrrr')
   const postId = req.params.id;
   const { comment } = req.body;
   if (!userId || !postId) {
@@ -272,19 +289,16 @@ const addNewComment = asyncHandler(async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(postId))
     throw new Error("No post with this id!");
 
-  const { username, profilePic } = await User.findById(userId, {
-    username: 1,
-    profilePic: 1,
-  });
-
+  const { username, profilePic } = await User.findById(userId);
+  console.log(profilePic,'sdfasdfdsad',username)
   const post = await Post.findByIdAndUpdate(
     postId,
     {
       $push: {
         comments: {
           commentedUserId: userId,
-          commentedUsername: username,
-          commentedUserpic: profilePic,
+          commentedUserName: username,
+          commentedUserPic: profilePic,
           comment: comment,
           time: new Date().toISOString(),
         },
@@ -292,12 +306,14 @@ const addNewComment = asyncHandler(async (req, res) => {
     },
     { new: true }
   );
-
+  
+  console.log(post,'sdasdsdasd')
   if(post){
+    const comments = post.comments
     res.status(200).json({
       status: 'success',
       message: 'Commented successfully',
-      data: post.comments[length - 1]
+      data: comments[comments - 1]
   })
   }else{
     res.status(500)
@@ -305,6 +321,31 @@ const addNewComment = asyncHandler(async (req, res) => {
   }
 });
 
+
+//@desc Get post comments
+//@route /:id/comments
+//@access /private
+
+const getPostComments = asyncHandler(async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.userId
+  if (!postId ||!userId) {
+    res.status(400);
+    throw new Error('Parameters not found')
+  }
+  const post = await Post.findById({_id: postId})
+  if(!post){
+    res.status(404);
+    throw new Error('Post not found')
+  }
+  const comments = post.comments
+  res.status(200).json({
+    status: "success",
+    data: comments,
+    message: "Post Comments fetched successfully.",
+  })
+})
+ 
 module.exports = {
   newPost,
   getAllPosts,
@@ -313,4 +354,6 @@ module.exports = {
   getTimelinePosts,
   likePost,
   getProfilePosts,
+  getPostComments,
+  addNewComment
 };

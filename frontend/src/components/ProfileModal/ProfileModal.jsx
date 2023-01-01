@@ -4,12 +4,14 @@ import "./ProfileModal.css";
 import { useDispatch, useSelector } from "react-redux";
 import { showLoading, hideLoading } from "../../redux/alertSlice";
 import { toast } from "react-hot-toast";
-import { USER, USER_PUT } from "../../axios";
+import { USER } from "../../axios";
+import { fetchUserById } from "../../redux/userSlice";
 
 function ProfileModal({ modalOpened, setModalOpened }) {
+  const token = localStorage.getItem('token')
   const { user } = useSelector((state) => state.users);
   const theme = useMantineTheme();
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(user);
   const [profilePic, setProfilePic] = useState({});
   const [coverPic, setCoverPic] = useState({});
   const dispatch = useDispatch();
@@ -17,25 +19,28 @@ function ProfileModal({ modalOpened, setModalOpened }) {
     const name = e.target.name;
     const value = e.target.value;
     setFormData((data) => ({ ...data, [name]: value }));
+    console.log(formData,'formData')
   };
   const reset = () => {
     setProfilePic(null);
     setCoverPic(null);
     setFormData({});
-  }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log(user,'hello')
+      console.log(formData,'formdataaaa')
       dispatch(showLoading());
       const response = await USER.post(`/${user?._id}`, formData);
       dispatch(hideLoading());
-      if(response.data.status){
-        toast.success(response.data.message)
-        setModalOpened(false)
-        reset()
-      }else{
-        toast.error('Error updating user.')
+      if (response.data.status) {
+        toast.success(response.data.message);
+        setModalOpened(false);
+        dispatch(fetchUserById(token));
+        reset();
+      } else {
+        console.log(response);  
+        toast.error(response.data.message)
       }
     } catch (error) {
       dispatch(hideLoading());
@@ -44,8 +49,13 @@ function ProfileModal({ modalOpened, setModalOpened }) {
     }
   };
   useEffect(() => {
-    setFormData({ ...formData, ...profilePic, ...coverPic });
-  }, [profilePic,coverPic]);
+    if(!user){
+      fetchUserById(token);
+    }
+    if(user){
+      setFormData({...user})
+    }
+  }, [profilePic, coverPic]);
 
   const onDPImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -60,7 +70,6 @@ function ProfileModal({ modalOpened, setModalOpened }) {
       setCoverPic({ cover: img });
     }
   };
-
   return (
     <Modal
       overlayColor={
@@ -77,101 +86,166 @@ function ProfileModal({ modalOpened, setModalOpened }) {
       <form className="infoForm" encType="multipart/form-data">
         <h3>Your Info</h3>
         <div>
-          <input
-            type="text"
-            className="infoInput"
-            name="fname"
-            placeholder="First Name"
-            onChange={handleChange}
-          />
-          <input
-            type="text"
-            className="infoInput"
-            name="lname"
-            placeholder="Last Name"
-            onChange={handleChange}
-          />
+          <div className="d-flex col-6">
+            <label htmlFor="fname" className="label">
+              First Name
+            </label>
+            <input
+              type="text"
+              className="infoInput"
+              name="fname"
+              id="fname"
+              defaultValue={formData?.fname}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="d-flex col-6">
+            <label htmlFor="lname" className="label">
+              Last Name
+            </label>
+            <input
+              type="text"
+              className="infoInput"
+              name="lname"
+              id="lname"
+              defaultValue={formData?.lname}
+              onChange={handleChange}
+            />
+          </div>
         </div>
         <div>
-          <input
-            type="date"
-            className="infoInput"
-            name="dob"
-            placeholder="Date"
-            onChange={handleChange}
-          />
-          <select
-            className="form-select infoSelect"
-            aria-label="Default select example"
-            name="gender"
-            onChange={handleChange}
-          >
-            <option selected defaultValue>
-              Choose Gender
-            </option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
-          </select>
+          <div className=" d-flex col-6">
+            <label htmlFor="dob" className="label">
+              Date of Birth
+            </label>
+            <input
+              type="date"
+              className="infoInput"
+              name="dob"
+              id="dob"
+              defaultValue={formData?.details?.dob.slice(0,10)}
+              onChange={handleChange}
+            />
+          </div>
+          <div className=" d-flex col-6">
+            <label htmlFor="gender" className="label">
+              Gender
+            </label>
+            <select
+              className="form-select infoSelect"
+              aria-label="Default select example"
+              name="gender"
+              id="gender"
+              defaultValue={formData?.details?.gender}
+              onChange={handleChange}
+            >
+              <option selected defaultValue>
+                Choose Gender
+              </option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
         </div>
         <div>
-          <input
-            type="text"
-            className="infoInput"
-            name="bio"
-            placeholder="Bio"
-            onChange={handleChange}
-          />
+          <div className="d-flex col-12">
+            <label htmlFor="bio" className="label">
+              Bio
+            </label>
+            <input
+              type="text"
+              className="infoInput"
+              name="bio"
+              id="bio"
+              defaultValue={formData?.details?.bio}
+              onChange={handleChange}
+            />
+          </div>
         </div>
         <div>
-          <select
-            className="form-select infoSelect"
-            aria-label="Default select example"
-            name="relation"
-            onChange={handleChange}
-          >
-            <option selected defaultValue>
-              Choose Relation Status
-            </option>
-            <option>Single</option>
-            <option>In Relationship</option>
-            <option>Married</option>
-          </select>
-          <input
-            type="text"
-            className="infoInput"
-            name="work"
-            placeholder="Work At"
-            onChange={handleChange}
-          />
+          <div className="d-flex col-6">
+            <label htmlFor="relation" className="label">
+              Gender
+            </label>
+            <select
+              className="form-select infoSelect"
+              name="relation"
+              defaultValue={formData?.details?.relation}
+              onChange={handleChange}
+            >
+              <option selected defaultValue>
+                Choose Relation Status
+              </option>
+              <option>Single</option>
+              <option>In Relationship</option>
+              <option>Married</option>
+            </select>
+          </div>
+          <div className="d-flex col-6">
+            <label htmlFor="work" className="label">
+              Works At
+            </label>
+            <input
+              type="text"
+              className="infoInput"
+              name="work"
+              defaultValue={formData?.details?.work}
+              onChange={handleChange}
+            />
+          </div>
         </div>
         <div>
-          <input
-            type="text"
-            className="infoInput"
-            name="city"
-            placeholder="City"
-            onChange={handleChange}
-          />
-          <input
-            type="text"
-            className="infoInput"
-            name="country"
-            placeholder="Country"
-            onChange={handleChange}
-          />
+          <div className="d-flex col-6">
+            <label htmlFor="city" className="label">
+              City
+            </label>
+            <input
+              type="text"
+              className="infoInput"
+              name="city"
+              defaultValue={formData?.details?.city}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="d-flex col-6">
+            <label htmlFor="country" className="label">
+              Country
+            </label>
+            <input
+              type="text"
+              className="infoInput"
+              name="country"
+              defaultValue={formData?.details?.country}
+              onChange={handleChange}
+            />
+          </div>
         </div>
         <div>
-          Profile Image
-          <input
-            type="file"
-            id="profilePic"
-            name="profilePic"
-            onChange={onDPImageChange}
-            multiple={false}
-          />
-          Cover Image
-          <input type="file" id="coverPic" name="coverPic" onChange={onCoverImageChange} multiple={false}/>
+          <div className="d-flex col-6">
+            <label className="label" htmlFor="profilePic">
+              Profile Image
+            </label>
+            <input
+              type="file"
+              id="profilePic"
+              name="profilePic"
+              onChange={onDPImageChange}
+              multiple={false}
+            />
+          </div>
+          <div className="d-flex col-6">
+            <label className="label" htmlFor="profilePic">
+              Cover Image
+            </label>
+            <input
+              type="file"
+              id="coverPic"
+              name="coverPic"
+              onChange={onCoverImageChange}
+              multiple={false}
+            />
+          </div>
         </div>
         <button
           className="button infoButton"
