@@ -7,6 +7,8 @@ const errorHandler = require('./middleware/errorMiddleware')
 const userRoute = require('./routes/userRoutes')
 const postRoute = require('./routes/postRoutes')
 const adminRoute = require('./routes/adminRoutes')
+const chatRoute = require('./routes/chatRoutes')
+const messageRoute = require('./routes/messageRoutes')
 
 const port =  process.env.PORT || 5000
 
@@ -21,6 +23,8 @@ app.use(express.urlencoded({ limit: '50mb',extended: false }))
 app.use('/',userRoute)
 app.use('/post',postRoute)
 app.use('/admin',adminRoute)
+app.use('/chat',chatRoute)
+app.use('/message',messageRoute)
 
 
 app.use(errorHandler)

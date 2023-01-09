@@ -68,3 +68,32 @@ export const ADMIN = axios.create({
 export const ADMIN_GET = ADMIN.get;
 export const ADMIN_POST = ADMIN.post;
 export const ADMIN_PUT = ADMIN.put;
+
+
+export const CHAT_API = axios.create({
+    baseURL: "http://localhost:5000/chat"
+})
+
+
+
+CHAT_API.interceptors.request.use(
+    config => {
+        config.headers["Authorization"] = `Bearer ${localStorage.getItem('token')}`;
+        return config;
+    }
+)
+
+
+export const MESSAGE_API = axios.create({
+    baseURL: "http://localhost:5000/message"
+})
+
+MESSAGE_API.interceptors.request.use(
+    config => {
+        config.headers["Authorization"] = `Bearer ${localStorage.getItem('token')}`;
+        return config;
+    }
+)
+
+export const MESSAGE_API_GET = MESSAGE_API.get;
+export const MESSAGE_API_POST = MESSAGE_API.post;

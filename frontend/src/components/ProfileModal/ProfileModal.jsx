@@ -15,6 +15,17 @@ function ProfileModal({ modalOpened, setModalOpened }) {
   const [profilePic, setProfilePic] = useState({});
   const [coverPic, setCoverPic] = useState({});
   const dispatch = useDispatch();
+  
+  useEffect(()=>{
+    if(!user){
+      dispatch(fetchUserById(token))
+    }
+  },[dispatch])
+
+  useEffect(()=>{
+      setFormData({...formData,...profilePic,...coverPic})
+  },[profilePic,coverPic])
+
   const handleChange = (e) => {
     const name = e.target.name;
     const value = e.target.value;
@@ -29,9 +40,8 @@ function ProfileModal({ modalOpened, setModalOpened }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log(formData,'formdataaaa')
       dispatch(showLoading());
-      const response = await USER.post(`/${user?._id}`, formData);
+      const response = await USER.post(`/${user?._id}/user`, formData);
       dispatch(hideLoading());
       if (response.data.status) {
         toast.success(response.data.message);
@@ -48,14 +58,6 @@ function ProfileModal({ modalOpened, setModalOpened }) {
       toast.error(error.response.data.message);
     }
   };
-  useEffect(() => {
-    if(!user){
-      fetchUserById(token);
-    }
-    if(user){
-      setFormData({...user})
-    }
-  }, [profilePic, coverPic]);
 
   const onDPImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -70,6 +72,7 @@ function ProfileModal({ modalOpened, setModalOpened }) {
       setCoverPic({ cover: img });
     }
   };
+  console.log(formData,'sdjadaksajd111')
   return (
     <Modal
       overlayColor={
@@ -123,7 +126,7 @@ function ProfileModal({ modalOpened, setModalOpened }) {
               className="infoInput"
               name="dob"
               id="dob"
-              defaultValue={formData?.details?.dob.slice(0,10)}
+              defaultValue={formData?.details?.dob?.slice(0,10)}
               onChange={handleChange}
             />
           </div>

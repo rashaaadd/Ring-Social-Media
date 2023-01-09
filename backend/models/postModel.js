@@ -5,9 +5,6 @@ const postSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
-    userName:{
-        type: String,
-    },
     desc:{
         type: String,
     },
@@ -20,6 +17,11 @@ const postSchema = mongoose.Schema({
         required: true
     },
     likes:{
+        type:[mongoose.Schema.Types.ObjectId],
+        ref: "User",
+        default: []
+    },
+    reports:{
         type:[mongoose.Schema.Types.ObjectId],
         ref: "User",
         default: []

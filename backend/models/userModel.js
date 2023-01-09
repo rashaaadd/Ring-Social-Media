@@ -79,6 +79,11 @@ const userSchema = mongoose.Schema(
     isBlocked:{
       type:Boolean,
       default:false,
+    },
+    savedPost:{
+      type:[mongoose.Schema.Types.ObjectId],
+      ref:"Post",
+      default:null
     }
   },
   {

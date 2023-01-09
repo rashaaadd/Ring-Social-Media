@@ -14,7 +14,10 @@ const {
     verifyOTP,
     resetPassword,
     getFollowingUsers,
-    getFollowersUsers
+    getFollowersUsers,
+    getUserDetails,
+    savePost,
+    verifyUser
 } = require('../controllers/userControllers');
 
 
@@ -22,17 +25,20 @@ const protect = require('../middleware/authMiddleware')
 
 router.post('/register',registerUser);
 
-router.post('/password/reset',getOTP);
+router.post('/get-otp',getOTP);
 
 router.post('/reset-password/:id',resetPassword);
 
-router.post('/verify-user',verifyOTP)
+router.post('/verify-otp',verifyOTP)
 
 router.post("/login",loginUser)
 
 router.get('/user',protect,getUser)
 
-router.post('/:id',protect,upload.fields([{
+router.get('/user/:id',protect,getUserDetails)
+
+
+router.post('/:id/user',protect,upload.fields([{
     name:'profile',
     maxCount:1  
 },{
@@ -49,6 +55,10 @@ router.route('/:id/follow').put(protect,followUser)
 router.get('/:id/following-users',protect,getFollowingUsers)
 
 router.get('/:id/follower-users',protect,getFollowersUsers)
+
+router.put('/:id/save',protect,savePost)
+
+router.post('/:id/verify-user',protect,verifyUser)
 
 
 

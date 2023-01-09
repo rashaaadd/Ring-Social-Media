@@ -75,11 +75,10 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 //@desc Get phone for Twilio
-//@route POST /password/reset
+//@route POST /get-otp
 //access /public
 const getOTP = asyncHandler(async (req, res) => {
   console.log("GET OTP CALL AT SERVER");
-  console.log(req.body, "req bodyyyyyy");
   const { phone } = req.body;
   if (!phone) {
     res.status(400);
@@ -93,14 +92,14 @@ const getOTP = asyncHandler(async (req, res) => {
   const otpResponse = await client.verify
     .services(TWILIO_SERVICE_ID)
     .verifications.create({
-      to: `+91${user.phone}`,
+      to: `+91${phone}`,
       channel: "sms",
     });
 
   res.status(200).json({
     status: "success",
-    data: user,
     message: "An OTP has beeen sent to your phone number.",
+    data:user
   });
 });
 
@@ -110,10 +109,8 @@ const getOTP = asyncHandler(async (req, res) => {
 
 const verifyOTP = asyncHandler(async (req, res) => {
   console.log("VERIFY OTP CALL AT SERVER");
-  console.log(req.body, "req bodyyyyyy");
   const { otp1, otp2, otp3, otp4, otp5, otp6, userData } = req.body;
   const otp = otp1 + otp2 + otp3 + otp4 + otp5 + otp6;
-  console.log(otp, "otppppp");
   if (!otp || otp.length !== 6) {
     res.status(400);
     throw new Error("Please add all fields.");
@@ -214,7 +211,7 @@ const loginUser = asyncHandler(async (req, res) => {
 const getUser = asyncHandler(async (req, res) => {
   console.log("GET USER CALL AT SERVER");
   try {
-    const user = await User.findById(req.userId).select("-password");
+    const user = await User.findById(req.userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     } else {
@@ -269,17 +266,17 @@ const updateUser = asyncHandler(async (req, res) => {
       req.body.coverPic = coverResult?.secure_url;
     }
   }
-  // if (!req.body.details) {
-  //   const details = {};
-  //   details.dob = req.body.dob ? req.body.dob : null;
-  //   details.relation = req.body.relation ? req.body.relation : null;
-  //   details.bio = req.body.bio ? req.body.bio : null;
-  //   details.work = req.body.work ? req.body.work : null;
-  //   details.gender = req.body.gender ? req.body.gender : null;
-  //   details.city = req.body.city ? req.body.city : null;
-  //   details.country = req.body.country ? req.body.country : null;
-  //   req.body.details = details;
-  // }
+  if (!req.body.details) {
+    const details = {};
+    details.dob = req.body.dob ? req.body.dob : null;
+    details.relation = req.body.relation ? req.body.relation : null;
+    details.bio = req.body.bio ? req.body.bio : null;
+    details.work = req.body.work ? req.body.work : null;
+    details.gender = req.body.gender ? req.body.gender : null;
+    details.city = req.body.city ? req.body.city : null;
+    details.country = req.body.country ? req.body.country : null;
+    req.body.details = details;
+  }
   console.log("brrrr");
   const user = await User.findByIdAndUpdate({ _id: userId }, req.body, {
     new: true,
@@ -327,6 +324,36 @@ const deleteUser = asyncHandler(async (req, res) => {
   //     throw new Error("Access denied")
   // }
 });
+
+//@desc Verify user
+//@route POST /:id/varify-user
+//access /private
+const verifyUser = asyncHandler(async(req,res) => {
+  console.log("VERIFY USER AT SERVER");
+  const userId = req.params.id;
+  console.log(userId)
+  const { password } = req.body
+  console.log(password)
+  if(!userId || !password){
+    res.status(400);  
+    throw new Error("Insufficient data for the request.");
+  }
+  const user = await User.findById(userId).select('+password');
+  if(!user){
+    res.status(404);  
+    throw new Error("User not found.");
+  }
+  if(user && (await bcrypt.compare(password,user.password))){
+    res.status(200).json({
+      status: "success",
+      message:'User verified.'
+    });
+  }else{
+    res.status(200).json({
+      message:'Incorrect password.'
+    })
+  }
+})
 
 //@desc Follow a user
 //@route PUT /follow/:id
@@ -437,6 +464,60 @@ const getFollowersUsers = asyncHandler(async (req, res) => {
   });
 });
 
+
+//@desc GET user details
+//@route GET /user/:id
+//access /private
+const getUserDetails = asyncHandler(async(req,res) => {
+  const userId = req.params.id
+  if(!userId){
+    res.status(400)
+    throw new Error('Parameters not found.')
+  }
+  const userDetails = await User.findById(userId)
+  if(!userDetails){
+    res.status(400)
+  }
+  res.status(200).json({
+    status:'success',
+    message:'User data fetched successfully.',
+    data: userDetails
+  })
+})
+
+
+//@desc Save post
+//@route PUT /:id/save
+//access /private
+const savePost = asyncHandler(async(req,res)=>{
+  console.log('SAVE POST CALL AT SERVER')
+  const postId = req.params.id;
+  if(!postId){
+    res.status(400)
+    throw new Error("Error getting params.")
+  }
+  console.log(req.userId,'dsasjdnasdja')
+  const user = await User.findById(req.userId)
+  console.log(user,'sdhajdahs')
+  if(!user){
+    res.status(400)
+    throw new Error("Error getting user details.")
+  }
+  if(!user.savedPost.includes(postId)){
+    user.savedPost.push(postId)
+  }else{
+    user.savedPost.pull(postId)
+  }
+  await user.save()
+  res.status(200).json({
+    status:'success',
+    message:'Post saved successfully.',
+    data: user.savedPost
+  })
+})
+
+
+
 module.exports = {
   registerUser,
   loginUser,
@@ -450,4 +531,7 @@ module.exports = {
   resetPassword,
   getFollowingUsers,
   getFollowersUsers,
+  getUserDetails,
+  savePost,
+  verifyUser
 };

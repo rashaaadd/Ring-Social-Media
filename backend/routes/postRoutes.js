@@ -10,7 +10,8 @@ const {
     likePost,
     getProfilePosts,
     getPostComments,
-    addNewComment
+    addNewComment,
+    getSavedPosts
 } = require('../controllers/postController');
 
 const protect = require('../middleware/authMiddleware');
@@ -28,6 +29,8 @@ router.get('/timeline',protect,getTimelinePosts)
 router.put('/:id/like',protect,likePost)
 
 router.route('/:id/comments').get(protect,getPostComments).post(protect,addNewComment)
+
+router.get('/:id/saved-posts',protect,getSavedPosts)
 
 
 

@@ -26,7 +26,9 @@ function ResetPass() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { password, confirmPass } = formData;
+    
     try {
+      console.log(password,'co....',confirmPass)
       if (password !== confirmPass) {
         setConfirmPass((prev) => !prev);
         Array.from(document.querySelectorAll("input")).forEach(
@@ -42,10 +44,12 @@ function ResetPass() {
         dispatch(hideLoading());
         if (response.data.status) {
           toast.success(response.data.message);
+          localStorage.clear();
           setPassReset((prev)=>!prev)
           setTimeout(()=>{
             navigate('/')
           },3000)
+          toast("Please login")
         }
       }
     } catch (error) {

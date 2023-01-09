@@ -1,0 +1,12 @@
+.SavedPosts{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 100;
+}
+
+.savedMessage{
+    justify-self: center;
+    align-self: center;
+    
+}

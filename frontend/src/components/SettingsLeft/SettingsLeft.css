@@ -1,0 +1,24 @@
+.SettingsLeft{
+    z-index: 2;
+    width: 30%;
+}
+.options{
+    display: flex;
+    justify-content: space-between;
+    background: var(--cardColor);
+    padding: 20px 30px;
+    margin: 30px 10px;
+    z-index: 3;
+    cursor:pointer;
+}
+
+.navIcons>a{
+    color: rgb(45, 45, 45);
+    z-index: 4;
+}
+
+.option-container{
+    /* background: rgb(237, 237, 237); */
+    padding: 10px;
+    margin-top: 50px;
+}

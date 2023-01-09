@@ -9,16 +9,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { fetchUserById } from "../../redux/userSlice";
 import { hideLoading, showLoading } from "../../redux/alertSlice";
-import { POSTS_API } from "../../axios";
+import { POSTS_API, USER_API_PUT } from "../../axios";
 import { toast } from "react-hot-toast";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-// eslint-disable-next-line
-import { format } from "timeago.js";
 import EditModal from "../EditModal/EditModal";
 import CommentModal from "../CommentModal.js/CommentModal";
+import moment from "moment";
 
 function Post({ data, id }) {
   const token = localStorage.getItem("token");
@@ -67,11 +66,16 @@ function Post({ data, id }) {
   };
 
   useEffect(() => {
-    if (!user) {
       fetchUserById(token);
-    }
-  }, []);
-  const options = ["Edit", "Delete", "Report"];
+  }, [token]);
+
+  let options;
+  console.log(user._id,'......',data.userId._id)
+  if(user?._id === data.userId._id){
+    options = ["Edit", "Delete"];
+  }else{
+    options = ["Report", "Save"];
+  }
 
   const ITEM_HEIGHT = 30;
   const [anchorEl, setAnchorEl] = useState(null);
@@ -119,6 +123,25 @@ function Post({ data, id }) {
           toast.error(error.response.data.message);
           break;
         }
+      case "Save":
+        try {
+          dispatch(showLoading())
+          const response = await USER_API_PUT(`/${postId}/save`)
+          dispatch(hideLoading())
+          if(response.data.status){
+            toast.success(response.data.message);
+            setAnchorEl(null);
+            break;
+          }else{
+            toast.error(response.data.message)
+            console.log(response)
+            break;
+          }
+        } catch (error) {
+          console.log(error)
+          toast.error(error.response.data.message)
+          break;
+        }
       default:
         break;
     }
@@ -151,9 +174,9 @@ function Post({ data, id }) {
           },
         }}
       >
-        {options.map((option) => (
-          <MenuItem
-            key={option}
+        {options.map((option,id) => (
+            <MenuItem
+            key={id}
             onClick={() => handleMenuClick(option, postDetails?._id)}
             style={{ fontSize: "0.8rem", fontFamily: "Montserrat" }}
           >
@@ -215,7 +238,6 @@ function Post({ data, id }) {
         {postDetails?.comments?.length > 0 ? (
           postDetails?.comments.slice(0, 2).map((comment, id) => {
             return (
-              <>
                 <div
                   className="details"
                   key = {id}
@@ -227,11 +249,10 @@ function Post({ data, id }) {
                   <span style={{ marginLeft: "5px" }}>{comment?.comment}</span>
                   <br />
                 </div>
-              </>
             );
           })
         ) : (
-          <span style={{ fontSize: "12px" }}>No Comments</span>
+          <span id={id} style={{ fontSize: "12px" }}>No Comments</span>
         )}
         {postDetails?.comments?.length>0 && (<span
           style={{ cursor: "pointer", fontSize: "14px" }}
@@ -241,7 +262,7 @@ function Post({ data, id }) {
         </span>)}
       </div>
       <span style={{ color: "var(--gray) ", fontSize: "10px",marginTop:'-10px' }}>
-        {format(postDetails?.createdAt)}
+        {moment(postDetails?.createdAt).fromNow()}
       </span>
     </div>
   );

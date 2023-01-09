@@ -19,6 +19,9 @@
     width: 1.5rem;
     height: 1.5rem;
 }
+.navIcons>a{
+    color: rgb(34, 34, 34);
+}
 .r-button{
     height: 3rem;
     width: 80%;

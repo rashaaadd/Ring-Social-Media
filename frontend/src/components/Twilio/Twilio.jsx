@@ -22,7 +22,7 @@ function Twilio({ userData }) {
     formData.userData = userData;
     try {
       dispatch(showLoading());
-      const response = await USER_API_POST("/verify-user", formData);
+      const response = await USER_API_POST("/verify-otp", formData);
       dispatch(hideLoading());
       const userId = response.data.data;
       if (response.data.status) {

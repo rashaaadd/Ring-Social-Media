@@ -276,9 +276,7 @@ const getProfilePosts = asyncHandler(async (req, res) => {
 //@access Private
 const addNewComment = asyncHandler(async (req, res) => {
   console.log("ADD NEW COMMENT CALL REACHED SERVER");
-  console.log(req.body,'sdjhasdjahsdha11......')
   const userId = req.userId;
-  console.log(userId,'d1111111brrrrrr')
   const postId = req.params.id;
   const { comment } = req.body;
   if (!userId || !postId) {
@@ -290,7 +288,6 @@ const addNewComment = asyncHandler(async (req, res) => {
     throw new Error("No post with this id!");
 
   const { username, profilePic } = await User.findById(userId);
-  console.log(profilePic,'sdfasdfdsad',username)
   const post = await Post.findByIdAndUpdate(
     postId,
     {
@@ -307,13 +304,12 @@ const addNewComment = asyncHandler(async (req, res) => {
     { new: true }
   );
   
-  console.log(post,'sdasdsdasd')
   if(post){
     const comments = post.comments
     res.status(200).json({
       status: 'success',
       message: 'Commented successfully',
-      data: comments[comments - 1]
+      data: comments[comments.length - 1]
   })
   }else{
     res.status(500)
@@ -345,6 +341,73 @@ const getPostComments = asyncHandler(async (req, res) => {
     message: "Post Comments fetched successfully.",
   })
 })
+
+
+//@desc Get saved posts
+//@route /:id/saved-posts
+//@access /private
+const getSavedPosts = asyncHandler(async(req,res) => {
+  console.log("GET USER SAVED POSTS")
+  const userId = req.params.id
+  console.log(userId);
+  
+  if (!userId) {
+    res.status(400);
+    throw new Error("Error getting params.")
+  }
+  const savedPosts = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $lookup: {
+        from: "posts",
+        localField: "savedPost",
+        foreignField: "_id",
+        as: "result",
+      },
+    },
+    {
+      $unwind: "$result",
+    },
+    {
+      $project: {
+        _id: "$result._id",
+        userId: "$result.userId",
+        desc: "$result.desc",
+        images: "$result.images",
+        cloudinary_id: "$result.cloudinary_id",
+        likes: "$result.likes",
+        comments: "$result.comments",
+        createdAt: "$result.createdAt",
+        updatedAt: "$result.updatedAt",
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "userId",
+      },
+    },
+    {
+      $unwind: "$userId",
+    },
+  ]);
+  console.log(savedPosts)
+  if(!savedPosts){
+    res.status(400);
+    throw new Error("Error getting saved posts.")
+  }
+  res.status(200).json({
+    status: "success",
+    data: savedPosts,
+    message: "Saved posts fetched successfully.",
+  })
+})
  
 module.exports = {
   newPost,
@@ -355,5 +418,6 @@ module.exports = {
   likePost,
   getProfilePosts,
   getPostComments,
-  addNewComment
+  addNewComment,
+  getSavedPosts
 };

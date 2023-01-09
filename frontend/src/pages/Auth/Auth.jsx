@@ -31,6 +31,7 @@ function Auth() {
       try {
         if (formData.password === formData.confirmPass) {
           dispatch(showLoading());
+
           const response = await USER_API_POST("/register", formData);
           dispatch(hideLoading());
           if (response.status) {
@@ -79,7 +80,7 @@ function Auth() {
     console.log(passForm, "passForm details");
     try {
       dispatch(showLoading());
-      const response = await USER_API_POST("/password/reset", passForm);
+      const response = await USER_API_POST("/get-otp", passForm);
       dispatch(hideLoading());
       if (response.data.status) {
         setUserData(response.data.data)

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Modal, useMantineTheme } from "@mantine/core";
-import { format } from "timeago.js";
 import SendIcon from "@mui/icons-material/Send";
 import "./CommentModal.css";
 import { useDispatch } from "react-redux";
@@ -8,6 +7,7 @@ import { hideLoading, showLoading } from "../../redux/alertSlice";
 import { POSTS_API } from "../../axios";
 import { toast } from "react-hot-toast";
 import { fetchUserById } from "../../redux/userSlice";
+import moment from 'moment'
 
 function CommentModal({
   commentModalOpen,
@@ -59,7 +59,10 @@ function CommentModal({
       overlayBlur={3}
       size="40%"
       opened={commentModalOpen}
-      onClose={() => setCommentModalOpen(false)}
+      onClose={() => {
+        setCommentModalOpen(false)
+        dispatch(fetchUserById(token));
+      }}
     >
       <div>
         <h4>Comments</h4>
@@ -85,7 +88,7 @@ function CommentModal({
                     <span className="ms-3">{comment?.comment}</span>
                   </div>
                   <span style={{ fontSize: "10px",marginLeft:'57px',marginTop:'-10px' }}>
-                    {format(comment?.time)}
+                    {moment(comment?.time).fromNow()}
                   </span>
                 </div>
               </>
